@@ -227,16 +227,128 @@ async function main(): Promise<void> {
 
   const { min, max } = counts.metadata.dateRange;
   const months = generateMonths(min, max);
-  let currentMonth = max;
-  let currentUnit: UnitMode = "cd";
-  let activeCategories: Set<string> | null = null;
-  let currentVizMode: VizMode = "bars";
-  let currentGrain: GrainMode = "area";
   let blocksData: BlocksData | null = null;
   let blocksLoading = false;
 
-  // Track current month index for easier navigation
-  let currentMonthIdx = months.indexOf(currentMonth);
+  // --- Permalink: hash-based URL state ---
+  // We use hash params (e.g. #month=2025-06&unit=cd&viz=bars&grain=area&cats=Television,Film)
+  // instead of query params because hash changes don't trigger server requests.
+  // This is critical for static-site deploys on GitHub Pages, which would otherwise
+  // try to route query-parameterized URLs to a server that doesn't exist.
+
+  /** Parse the URL hash into a key-value map. */
+  function parseHash(): Map<string, string> {
+    const hash = window.location.hash.replace(/^#/, "");
+    const params = new Map<string, string>();
+    if (!hash) return params;
+    for (const pair of hash.split("&")) {
+      const eqIdx = pair.indexOf("=");
+      if (eqIdx === -1) continue;
+      const key = decodeURIComponent(pair.slice(0, eqIdx));
+      const value = decodeURIComponent(pair.slice(eqIdx + 1));
+      params.set(key, value);
+    }
+    return params;
+  }
+
+  /**
+   * Parse URL hash params and return validated initial state values.
+   * Invalid or missing params silently fall back to defaults.
+   * Called once before state variables are declared so the returned
+   * values can be used directly as initializers (avoiding TS narrowing issues).
+   */
+  function readHashState(): {
+    month: string;
+    monthIdx: number;
+    unit: UnitMode;
+    vizMode: VizMode;
+    grain: GrainMode;
+    categories: Set<string> | null;
+  } {
+    const params = parseHash();
+
+    // month — must be a valid entry in the months array
+    let month = max;
+    let monthIdx = months.indexOf(max);
+    const monthParam = params.get("month");
+    if (monthParam && months.includes(monthParam)) {
+      month = monthParam;
+      monthIdx = months.indexOf(monthParam);
+    }
+
+    // unit — must be "cd" or "zip"
+    let unit: UnitMode = "cd";
+    const unitParam = params.get("unit");
+    if (unitParam === "cd" || unitParam === "zip") {
+      unit = unitParam;
+    }
+
+    // viz — must be "bars" or "circles"
+    let vizMode: VizMode = "bars";
+    const vizParam = params.get("viz");
+    if (vizParam === "bars" || vizParam === "circles") {
+      vizMode = vizParam;
+    }
+
+    // grain — must be "area" or "block"
+    let grain: GrainMode = "area";
+    const grainParam = params.get("grain");
+    if (grainParam === "area" || grainParam === "block") {
+      grain = grainParam;
+    }
+
+    // cats — comma-separated category names, or omit/empty for "all"
+    let categories: Set<string> | null = null;
+    const catsParam = params.get("cats");
+    if (catsParam !== undefined && catsParam !== "") {
+      const validCategories = counts.metadata.categories ?? [];
+      const requested = catsParam.split(",").filter((c) => validCategories.includes(c));
+      if (requested.length > 0) {
+        categories = new Set(requested);
+      }
+    }
+
+    return { month, monthIdx, unit, vizMode, grain, categories };
+  }
+
+  // Restore state from URL hash before declaring state variables.
+  // Using the returned values as initializers avoids TS6's aggressive
+  // control-flow narrowing of `let` variables with literal defaults.
+  const hashState = readHashState();
+  let currentMonth = hashState.month;
+  let currentUnit: UnitMode = hashState.unit;
+  let activeCategories: Set<string> | null = hashState.categories;
+  let currentVizMode: VizMode = hashState.vizMode;
+  let currentGrain: GrainMode = hashState.grain;
+  let currentMonthIdx = hashState.monthIdx;
+
+  /** Serialize current state to the URL hash via replaceState (no history entry). */
+  function updateHash(): void {
+    const pairs: string[] = [];
+    pairs.push(`month=${encodeURIComponent(currentMonth)}`);
+    pairs.push(`unit=${encodeURIComponent(currentUnit)}`);
+    pairs.push(`viz=${encodeURIComponent(currentVizMode)}`);
+    pairs.push(`grain=${encodeURIComponent(currentGrain)}`);
+    if (activeCategories !== null && activeCategories.size > 0) {
+      pairs.push(`cats=${encodeURIComponent([...activeCategories].sort().join(","))}`);
+    }
+    const newHash = `#${pairs.join("&")}`;
+    // replaceState avoids polluting the browser's back/forward history
+    history.replaceState(null, "", newHash);
+  }
+
+  /** Debounced version of updateHash — collapses rapid state changes (e.g. play
+   *  animation ticking through months) into a single URL update after 300ms. */
+  let hashDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  function debouncedUpdateHash(): void {
+    if (hashDebounceTimer !== null) {
+      clearTimeout(hashDebounceTimer);
+    }
+    hashDebounceTimer = setTimeout(() => {
+      hashDebounceTimer = null;
+      updateHash();
+    }, 300);
+  }
 
   // --- Build toolbar card with descriptive toggle rows ---
   const toolbar = document.createElement("div");
@@ -282,21 +394,21 @@ async function main(): Promise<void> {
   const { row: unitRow, toggle: unitToggle } = createToolbarRow(
     "Area",
     "Community districts or zip codes",
-    "CD",
+    currentUnit === "cd" ? "CD" : "ZIP",
     "Toggle area type",
   );
 
   const { row: vizRow, toggle: vizToggle } = createToolbarRow(
     "Shape",
     "3D bars or proportional circles",
-    "Bars",
+    currentVizMode === "bars" ? "Bars" : "Circles",
     "Toggle visualization shape",
   );
 
   const { row: grainRow, toggle: grainToggle } = createToolbarRow(
     "Detail",
     "Area polygons or block heatmap",
-    "Area",
+    currentGrain === "area" ? "Area" : "Block",
     "Toggle block-level heatmap",
   );
 
@@ -773,9 +885,39 @@ async function main(): Promise<void> {
     keyboard: false,
   };
 
+  // Choose initial camera based on restored viz/grain mode.
+  // Circles and block heatmap look best top-down; bars use isometric pitch.
+  const needsFlatView = currentVizMode !== "bars" || currentGrain !== "area";
+  const restoredViewState = needsFlatView ? FLAT_VIEW_STATE : INITIAL_VIEW_STATE;
+
+  // If grain was restored to "block", hide area-mode controls and apply
+  // toggle styling so the UI matches the state before any user interaction.
+  if (currentGrain !== "area") {
+    grainToggle.classList.add("toggle-active");
+    setAreaControlsVisible(false);
+    // Lazy-load blocks data for block grain mode
+    ensureBlocksData().then((loaded) => {
+      if (loaded) updateLayers();
+    });
+  }
+
+  // If categories were restored from hash, update pill active states.
+  // Use a non-narrowing check so TS doesn't infer `never` inside the callback.
+  if (activeCategories !== null && activeCategories.size > 0) {
+    const restoredCats = activeCategories;
+    filterBar.querySelectorAll(".cat-pill").forEach((el) => {
+      const pillText = el.textContent ?? "";
+      if (pillText === "All") {
+        el.classList.toggle("cat-active", false);
+      } else {
+        el.classList.toggle("cat-active", restoredCats.has(pillText));
+      }
+    });
+  }
+
   const deck = new Deck({
     parent: document.querySelector<HTMLDivElement>("#app")!,
-    initialViewState: heroSeen ? INITIAL_VIEW_STATE : HERO_VIEW_STATE,
+    initialViewState: heroSeen ? restoredViewState : HERO_VIEW_STATE,
     controller: lockedController,
     layers: buildVisualizationLayers(currentMonth, currentUnit),
     getTooltip: ({ object }: { object?: AreaFeature | CircleDataPoint }) => {
@@ -838,6 +980,10 @@ async function main(): Promise<void> {
 
   // (timeline notches already built above)
 
+  // Set initial hash so the URL always reflects the current state,
+  // even on a fresh visit with no hash params.
+  updateHash();
+
   // --- Stagger UI elements in after hero dismisses ---
   function revealUI(): void {
     const elements = [titleOverlay, captionEl, legend, filterBar, toolbar, timeline, attribution];
@@ -853,10 +999,11 @@ async function main(): Promise<void> {
     heroDismissed = true;
     sessionStorage.setItem("heroShown", "1");
     hero.classList.add("hero-fade");
-    // Cinematic pull-back to overview
+    // Cinematic pull-back to overview — use the restored view state so
+    // permalink-specified viz/grain modes get the correct camera angle.
     deck.setProps({
       initialViewState: {
-        ...INITIAL_VIEW_STATE,
+        ...restoredViewState,
         transitionDuration: 2000,
       },
     });
@@ -873,7 +1020,7 @@ async function main(): Promise<void> {
     if (heroDismissed) {
       deck.setProps({
         initialViewState: {
-          ...INITIAL_VIEW_STATE,
+          ...restoredViewState,
           transitionDuration: 2000,
         },
       });
@@ -1005,6 +1152,7 @@ async function main(): Promise<void> {
       const heatmap = buildHeatmapLayer(currentMonth);
       const base = buildBaseLayer(currentUnit);
       deck.setProps({ layers: heatmap ? [base, heatmap] : [base] });
+      debouncedUpdateHash();
       return;
     }
 
@@ -1024,6 +1172,8 @@ async function main(): Promise<void> {
     }
 
     deck.setProps({ layers: buildVisualizationLayers(currentMonth, currentUnit) });
+
+    debouncedUpdateHash();
   }
 
   // --- Unit toggle ---

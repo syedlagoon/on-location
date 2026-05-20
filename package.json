@@ -10,7 +10,8 @@
     "data": "tsx scripts/pipeline.ts",
     "boundaries": "tsx scripts/boundaries.ts",
     "captions": "tsx scripts/captions.ts",
-    "blocks": "tsx scripts/blocks.ts"
+    "blocks": "tsx scripts/blocks.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.2",
