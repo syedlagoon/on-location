@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "data": "tsx scripts/pipeline.ts"
+    "data": "tsx scripts/pipeline.ts",
+    "boundaries": "tsx scripts/boundaries.ts"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.2",

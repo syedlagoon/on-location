@@ -28,6 +28,7 @@ Update this section as scripts are created.
 - `npm run dev` — local dev server
 - `npm run build` — production build
 - `npm run data` — run the data pipeline; regenerates `public/data/counts.json`
+- `npm run boundaries` — download boundary GeoJSON files (idempotent, skips existing)
 
 ## Data pipeline notes
 
