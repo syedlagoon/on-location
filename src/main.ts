@@ -90,6 +90,15 @@ const INITIAL_VIEW_STATE = {
   bearing: 0,
 };
 
+/** Top-down view for circles mode — no pitch, no bearing. */
+const FLAT_VIEW_STATE = {
+  longitude: -73.96,
+  latitude: 40.72,
+  zoom: 10,
+  pitch: 0,
+  bearing: 0,
+};
+
 const HERO_VIEW_STATE = {
   longitude: -73.98,
   latitude: 40.75,
@@ -689,10 +698,21 @@ async function main(): Promise<void> {
   };
 
   // --- Deck instance ---
+  // Lock map manipulation but keep picking active for tooltips and clicks
+  const lockedController = {
+    scrollZoom: false,
+    dragPan: false,
+    dragRotate: false,
+    doubleClickZoom: false,
+    touchZoom: false,
+    touchRotate: false,
+    keyboard: false,
+  };
+
   const deck = new Deck({
     parent: document.querySelector<HTMLDivElement>("#app")!,
     initialViewState: heroSeen ? INITIAL_VIEW_STATE : HERO_VIEW_STATE,
-    controller: false,
+    controller: lockedController,
     layers: [buildVisualizationLayer(currentMonth, currentUnit)],
     getTooltip: ({ object }: { object?: AreaFeature | CircleDataPoint }) => {
       // No tooltip in block heatmap mode
@@ -949,6 +969,16 @@ async function main(): Promise<void> {
     e.stopPropagation();
     currentVizMode = currentVizMode === "bars" ? "circles" : "bars";
     vizToggle.textContent = currentVizMode === "bars" ? "Bars" : "Circles";
+
+    // Transition camera: bars = isometric (pitch 45), circles = top-down (pitch 0)
+    const targetView = currentVizMode === "bars" ? INITIAL_VIEW_STATE : FLAT_VIEW_STATE;
+    deck.setProps({
+      initialViewState: {
+        ...targetView,
+        transitionDuration: 800,
+      },
+    });
+
     updateLayers();
   });
 
@@ -964,6 +994,11 @@ async function main(): Promise<void> {
       grainToggle.textContent = "Block";
       grainToggle.classList.add("toggle-active");
 
+      // Heatmap looks best top-down
+      deck.setProps({
+        initialViewState: { ...FLAT_VIEW_STATE, transitionDuration: 800 },
+      });
+
       // Hide area-mode-only controls
       setAreaControlsVisible(false);
 
@@ -976,6 +1011,12 @@ async function main(): Promise<void> {
       currentGrain = "area";
       grainToggle.textContent = "Area";
       grainToggle.classList.remove("toggle-active");
+
+      // Return to the appropriate camera for current viz mode
+      const targetView = currentVizMode === "bars" ? INITIAL_VIEW_STATE : FLAT_VIEW_STATE;
+      deck.setProps({
+        initialViewState: { ...targetView, transitionDuration: 800 },
+      });
 
       // Restore area-mode controls
       setAreaControlsVisible(true);
