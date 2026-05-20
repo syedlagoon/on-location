@@ -2,9 +2,29 @@
 
 Guidance for Claude Code working in this repository. Read `SPEC.md` before starting any work.
 
+## General Principles
+
+- When asked to implement a plan, execute it immediately without asking for approval. Do not pause to present plans for review unless explicitly asked to plan first. Default to action.
+- Never ask the user to manually perform file operations (move, copy, rename, create directories). Always make the change directly using available tools.
+
+## Build & Quality
+
+- After implementing UI changes, always run the build/lint step before reporting completion. Fix any ESLint errors or build failures before committing. Common issues: missing closing tags, effect-based state updates, ref-during-render.
+
+## Project Context
+
+- This project uses HTML, CSS, JavaScript, and Markdown as primary languages. Component files live across 100+ files. When making bulk changes across many files, commit and push incrementally rather than waiting until the end.
+
+## Problem Solving
+
+- When a first approach to a UI problem fails after 2 attempts, stop and rethink the fundamental approach rather than iterating on the same broken strategy. Propose the alternative direction to the user before investing more effort.
+
 ## Project
 
 On Location — an interactive deck.gl visualization of NYC film-permit activity over time. A stylized map of New York City where areas extrude into isometric bars sized by the number of film/TV shoots, with a month slider that animates the bars. See `SPEC.md` for full scope, goals, and non-goals.
+
+- **GitHub repo**: `git@github.com:syedlagoon/on-location.git`
+- **Local folder**: `neighborhood-films` (does not match the repo name — do not guess the remote name from the directory)
 
 ## Stack
 
