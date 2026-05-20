@@ -233,16 +233,20 @@ async function main(): Promise<void> {
   const unitToggle = document.createElement("button");
   unitToggle.id = "unit-toggle";
   unitToggle.textContent = "CD";
+  unitToggle.setAttribute("aria-label", "Toggle between community district and zip code view");
+  unitToggle.title = "Community District / Zip Code";
 
   const vizToggle = document.createElement("button");
   vizToggle.id = "viz-toggle";
   vizToggle.textContent = "|||";
-  vizToggle.title = "Toggle bars / circles";
+  vizToggle.setAttribute("aria-label", "Toggle between bars and circles visualization");
+  vizToggle.title = "Bars / Circles";
 
   const grainToggle = document.createElement("button");
   grainToggle.id = "grain-toggle";
   grainToggle.textContent = "Block";
-  grainToggle.title = "Toggle block-level heatmap";
+  grainToggle.setAttribute("aria-label", "Toggle block-level heatmap");
+  grainToggle.title = "Block-level heatmap";
 
   // --- Build toolbar (toggle buttons only) ---
   const toolbar = document.createElement("div");
@@ -807,7 +811,7 @@ async function main(): Promise<void> {
     const cy = ci >= 0 ? pts[ci].y : 0;
 
     detailPanel.innerHTML = `
-      <button id="detail-close">\u2715</button>
+      <button id="detail-close" aria-label="Close detail panel">\u2715</button>
       <h2>${label}</h2>
       <div class="detail-stat">
         <span class="detail-big">${currentCount}</span>

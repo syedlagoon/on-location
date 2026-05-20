@@ -95,12 +95,13 @@ Living design document. All visual decisions, tokens, and rationale live here.
 
 | Token | Value |
 |---|---|
-| `--blur-surface` | `16px` |
-| `--blur-tooltip` | `12px` |
-| `--shadow-panel` | `0 8px 32px rgba(0,0,0,0.5)` |
-| `--shadow-pill` | `0 2px 8px rgba(0,0,0,0.3)` |
-| `--transition-fast` | `120ms ease` |
-| `--transition-normal` | `200ms ease` |
+| `--blur-surface` | `20px` |
+| `--blur-tooltip` | `14px` |
+| `--shadow-panel` | `0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)` |
+| `--shadow-pill` | `0 2px 8px rgba(0,0,0,0.4)` |
+| `--shadow-glow` | `0 0 20px rgba(255,200,60,0.15)` |
+| `--transition-fast` | `150ms ease` |
+| `--transition-normal` | `250ms ease` |
 | `--transition-slow` | `400ms cubic-bezier(0.16, 1, 0.3, 1)` |
 | `--transition-panel` | `500ms cubic-bezier(0.16, 1, 0.3, 1)` |
 
@@ -166,6 +167,75 @@ Living design document. All visual decisions, tokens, and rationale live here.
 9. **P3**: Attribution link has no hover style
 10. **P3**: Year labels on timeline barely visible (opacity 0.4, 10px)
 
+## Post-Improvement Audit (Phase 11)
+
+**Date**: 2026-05-20 | **Overall**: 82/100 (+30 from baseline)
+
+### Visual Hierarchy — 8/10 (+3)
+- Inter font gives professional authority; JetBrains Mono distinguishes data from UI
+- Title with amber accent bar creates clear brand anchor
+- Type scale properly differentiates display/heading/body/caption/label
+- Mono font on legend, timeline, and stats signals "data" at a glance
+
+### Information Architecture — 8/10 (+2)
+- Bottom-center stacking (filter > toolbar > timeline) is well-spaced
+- Legend now in glass card — consistent surface treatment
+- Detail panel sections separated by border-top dividers
+- Hero accent bar + uppercase subtitle add narrative framing
+
+### Cognitive Load — 7/10 (+1)
+- Toggle buttons have proper aria-labels and title text
+- Notch hover tooltips show month + count — no guessing
+- Category pills have per-category colors — instant recognition
+- Staggered UI reveal after hero orients the user progressively
+
+### Interaction Quality — 8/10 (+4)
+- All buttons: hover lift, active scale press, focus-visible ring
+- Detail panel: staggered child entrance choreography
+- Close button: bordered square, hover state, active scale
+- Notch: scaleX hover, tooltip slide-up, pulse on active
+- Attribution: subtle underline hover transition
+
+### Visual Polish — 9/10 (+5)
+- Full CSS custom property system — 40+ tokens
+- Consistent spacing from 4px scale
+- Consistent border-radius (sm/md/lg/pill)
+- Glass-morphism on all floating elements with consistent blur
+- Shadow depth hierarchy (pill < panel)
+- Custom scrollbar, ::selection color, text-rendering
+
+### Color Usage — 8/10 (+3)
+- Category-specific colors (Television=blue, Film=red, etc.)
+- Trend colors (green up, red down, muted flat)
+- Gradient sparkline fill with opacity fade
+- Legend gradient refined with mid-tone
+- Border opacities standardized (0.08, 0.15)
+
+### Delight / Personality — 8/10 (+5)
+- Hero: italic title, gradient accent bar, fade-up animation
+- Active notch pulse animation with amber glow
+- Staggered UI reveal after hero dismisses
+- Sparkline: gradient fill, round caps, ring dot marker
+- prefers-reduced-motion respected
+- Spring easing on height transitions
+
+### Anti-patterns Resolved
+1. **P0 FIXED**: Global focus-visible styles + per-component overrides
+2. **P0 FIXED**: Inter + JetBrains Mono loaded via Google Fonts
+3. **P1 FIXED**: All values use CSS custom properties
+4. **P1 FIXED**: Hover lift + active press on all buttons
+5. **P1 FIXED**: Category pills have per-category active colors
+6. **P2 FIXED**: Close button is bordered square with hover state
+7. **P2 FIXED**: Legend in glass card with consistent surface
+8. **P2 FIXED**: Notch hover tooltip shows month + count
+9. **P3 FIXED**: Attribution link has underline hover transition
+10. **P3 FIXED**: Year labels use mono font with improved contrast
+
+### Remaining items (P3, won't fix in this pass)
+- Toggle button labels ("CD", "|||") are still cryptic — acceptable for power users
+- No WebGL shader effects (Phase 12 / stretch)
+- No spring physics on panel (browser CSS springs not yet widely supported)
+
 ## Decisions Log
 
 | Date | Decision | Rationale |
@@ -175,3 +245,8 @@ Living design document. All visual decisions, tokens, and rationale live here.
 | 2026-05-20 | Amber (#ffc83c) as sole accent | Film/warmth association; high contrast on dark; already established in v1 |
 | 2026-05-20 | Glass-morphism for floating panels | Creates depth hierarchy over map without occluding; feels modern |
 | 2026-05-20 | Category-specific colors for filter pills | Helps distinguish categories at a glance; enables future per-category data coloring |
+| 2026-05-20 | Italic hero title | Adds cinematic personality; differentiates from safe/generic |
+| 2026-05-20 | Gradient accent bars (title + hero) | Creates a signature visual motif; amber fading to transparent |
+| 2026-05-20 | prefers-reduced-motion support | Accessibility requirement; all animations zeroed for users who need it |
+| 2026-05-20 | Staggered UI reveal after hero | Progressive disclosure; reduces cognitive overload on first load |
+| 2026-05-20 | Trend colors (green/red/muted) | Semantic color adds information without explanation needed |

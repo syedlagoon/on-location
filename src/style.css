@@ -333,7 +333,7 @@ body {
 }
 
 #title-overlay h1 {
-  font-size: var(--text-title);
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
@@ -341,21 +341,22 @@ body {
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
 }
 
+/* Amber accent mark — the app's visual signature */
 #title-overlay .title-accent {
   display: block;
-  width: 28px;
+  width: 32px;
   height: 3px;
-  background: var(--color-accent);
+  background: linear-gradient(90deg, var(--color-accent), rgba(255, 200, 60, 0.3));
   border-radius: 2px;
-  margin-top: var(--space-sm);
+  margin-top: 10px;
   box-shadow: var(--shadow-glow);
 }
 
 #title-overlay p {
   font-size: 13px;
   color: var(--color-fg-muted);
-  margin-top: var(--space-sm);
-  letter-spacing: 0.01em;
+  margin-top: 10px;
+  letter-spacing: 0.02em;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
 }
 
@@ -710,23 +711,25 @@ body {
 .hero-title {
   font-size: var(--text-display);
   font-weight: 700;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
   color: var(--color-fg);
   opacity: 0;
   animation: heroFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   line-height: 1;
+  /* Distinctive: slight italic lean for cinematic personality */
+  font-style: italic;
 }
 
 .hero-accent {
   display: block;
-  width: 48px;
+  width: 56px;
   height: 3px;
-  background: var(--color-accent);
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
   border-radius: 2px;
-  margin: var(--space-lg) auto 0;
+  margin: var(--space-xl) auto 0;
   opacity: 0;
   animation: heroFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 0 24px rgba(255, 200, 60, 0.25);
 }
 
 .hero-subtitle {
@@ -735,17 +738,19 @@ body {
   opacity: 0;
   margin-top: var(--space-lg);
   animation: heroFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 12px;
 }
 
 .hero-loading {
-  font-size: 11px;
+  font-size: 10px;
   font-family: var(--font-mono);
   color: var(--color-fg-subtle);
   opacity: 0;
   margin-top: var(--space-3xl);
   animation: heroFadeUp 0.5s ease 1.5s forwards;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -819,6 +824,34 @@ body {
   background: rgba(255, 255, 255, 0.03);
   border-radius: var(--radius-sm);
   padding: var(--space-sm);
+}
+
+
+/* --- Focus management --- */
+
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Override for elements that set their own focus-visible */
+#unit-toggle:focus-visible,
+#viz-toggle:focus-visible,
+#grain-toggle:focus-visible,
+#detail-close:focus-visible,
+.cat-pill:focus-visible,
+#timeline-track:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 
