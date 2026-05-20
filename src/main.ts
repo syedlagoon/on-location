@@ -291,7 +291,12 @@ async function main(): Promise<void> {
       notch.className = "notch";
       const heightPct = Math.max(8, (totals[i] / maxTotal) * 100); // min 8% so empty months are still visible
       notch.style.height = `${heightPct}%`;
-      notch.title = `${formatMonth(months[i])}: ${totals[i]} shoots`;
+
+      // Hover tooltip (hidden by default, shown via CSS)
+      const tooltip = document.createElement("div");
+      tooltip.className = "notch-tooltip";
+      tooltip.textContent = `${formatMonth(months[i])}: ${totals[i]}`;
+      notch.appendChild(tooltip);
 
       if (i === currentMonthIdx) {
         notch.classList.add("notch-active");
@@ -630,14 +635,17 @@ async function main(): Promise<void> {
   }
 
   const tooltipStyle = {
-    fontFamily: "system-ui, sans-serif",
-    fontSize: "13px",
+    fontFamily: "'Inter', system-ui, sans-serif",
+    fontSize: "12px",
     padding: "8px 12px",
-    background: "rgba(20, 20, 30, 0.92)",
-    color: "#fafafa",
-    borderRadius: "6px",
-    lineHeight: "1.4",
+    background: "rgba(15, 15, 25, 0.95)",
+    color: "#f0f0f0",
+    borderRadius: "8px",
+    lineHeight: "1.5",
     maxWidth: "240px",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
+    backdropFilter: "blur(12px)",
   };
 
   // --- Deck instance ---

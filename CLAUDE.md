@@ -39,6 +39,7 @@ On Location — an interactive deck.gl visualization of NYC film-permit activity
 - `public/data/` — generated `counts.json` and boundary GeoJSON (committed)
 - `src/` — front-end app (deck.gl)
 - `SPEC.md` — project spec; the source of truth for scope
+- `DESIGN.md` — living design system: tokens, typography, color, spacing, decisions log
 - `CLAUDE.md` — this file
 
 ## Commands
@@ -64,6 +65,8 @@ Update this section as scripts are created.
 - Keep the data pipeline and the front end as separate, clearly-scoped modules.
 - Small, focused commits with imperative messages.
 - Comment non-obvious data-cleaning logic.
+- All visual values (colors, spacing, radii, fonts, transitions) use CSS custom properties defined in `src/style.css` `:root`. See `DESIGN.md` for the full token reference.
+- Use `DESIGN.md` as the design authority for all visual decisions.
 
 ## Constraints — do not
 
