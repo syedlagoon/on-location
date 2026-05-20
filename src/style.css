@@ -17,3 +17,15 @@ body {
   width: 100vw;
   height: 100vh;
 }
+
+.deck-tooltip {
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  padding: 8px 12px;
+  background: rgba(20, 20, 30, 0.92);
+  color: #fafafa;
+  border-radius: 6px;
+  pointer-events: none;
+  max-width: 240px;
+  line-height: 1.4;
+}
