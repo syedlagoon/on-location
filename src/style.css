@@ -29,3 +29,62 @@ body {
   max-width: 240px;
   line-height: 1.4;
 }
+
+#controls {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: rgba(20, 20, 30, 0.85);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  z-index: 1;
+}
+
+#play-btn,
+#unit-toggle {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fafafa;
+  font-size: 14px;
+  font-family: system-ui, sans-serif;
+  font-weight: 600;
+  height: 36px;
+  border-radius: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#play-btn {
+  width: 36px;
+  font-size: 16px;
+}
+
+#unit-toggle {
+  padding: 0 14px;
+  min-width: 52px;
+}
+
+#play-btn:hover,
+#unit-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#month-slider {
+  width: 300px;
+  accent-color: #ffc83c;
+}
+
+#month-label {
+  color: #fafafa;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  min-width: 5.5em;
+}

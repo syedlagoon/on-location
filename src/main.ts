@@ -21,7 +21,18 @@ interface CdProperties {
   shape_area: string;
 }
 
+interface ZipProperties {
+  modzcta: string;
+  label: string;
+  zcta: string;
+  pop_est: string;
+}
+
 type CdFeature = Feature<Geometry, CdProperties>;
+type ZipFeature = Feature<Geometry, ZipProperties>;
+type AreaFeature = CdFeature | ZipFeature;
+
+type UnitMode = "cd" | "zip";
 
 // --- Constants ---
 
@@ -67,6 +78,36 @@ function cdKey(boro_cd: string): string | null {
   return `${boroughName}-${cdNumber}`;
 }
 
+/** Generate inclusive array of "YYYY-MM" strings from min to max. */
+function generateMonths(min: string, max: string): string[] {
+  const months: string[] = [];
+  let [year, month] = min.split("-").map(Number);
+  const [maxYear, maxMonth] = max.split("-").map(Number);
+
+  while (year < maxYear || (year === maxYear && month <= maxMonth)) {
+    months.push(`${year}-${String(month).padStart(2, "0")}`);
+    month++;
+    if (month > 12) {
+      month = 1;
+      year++;
+    }
+  }
+  return months;
+}
+
+/** Compute the max shoot count across all CDs for a given month. */
+function computeMaxCount(
+  byCd: Record<string, Record<string, number>>,
+  month: string,
+): number {
+  let max = 0;
+  for (const monthCounts of Object.values(byCd)) {
+    const c = monthCounts[month] ?? 0;
+    if (c > max) max = c;
+  }
+  return max;
+}
+
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
@@ -88,73 +129,188 @@ function getColor(
 // --- Main ---
 
 async function main(): Promise<void> {
-  const [counts, cdBoundaries] = await Promise.all([
+  const [counts, cdBoundaries, zipBoundaries] = await Promise.all([
     fetch("/data/counts.json").then((r) => r.json() as Promise<CountsData>),
     fetch("/data/cd-boundaries.geojson").then(
       (r) => r.json() as Promise<FeatureCollection<Geometry, CdProperties>>,
     ),
+    fetch("/data/zip-boundaries.geojson").then(
+      (r) => r.json() as Promise<FeatureCollection<Geometry, ZipProperties>>,
+    ),
   ]);
 
-  const selectedMonth = counts.metadata.dateRange.max;
+  const { min, max } = counts.metadata.dateRange;
+  const months = generateMonths(min, max);
+  let currentMonth = max;
+  let currentUnit: UnitMode = "cd";
 
-  // Compute max count for this month across all CDs
-  let maxCount = 0;
-  for (const monthCounts of Object.values(counts.byCommunityDistrict)) {
-    const c = monthCounts[selectedMonth] ?? 0;
-    if (c > maxCount) maxCount = c;
+  // --- Build controls UI ---
+  const controls = document.createElement("div");
+  controls.id = "controls";
+
+  const unitToggle = document.createElement("button");
+  unitToggle.id = "unit-toggle";
+  unitToggle.textContent = "CD";
+
+  const playBtn = document.createElement("button");
+  playBtn.id = "play-btn";
+  playBtn.textContent = "\u25B6";
+
+  const slider = document.createElement("input");
+  slider.id = "month-slider";
+  slider.type = "range";
+  slider.min = "0";
+  slider.max = String(months.length - 1);
+  slider.value = String(months.length - 1);
+
+  const monthLabel = document.createElement("span");
+  monthLabel.id = "month-label";
+  monthLabel.textContent = currentMonth;
+
+  controls.append(unitToggle, playBtn, slider, monthLabel);
+  document.body.appendChild(controls);
+
+  // --- Resolve the counts key and display label for a feature ---
+  function resolveFeature(
+    f: AreaFeature,
+    unit: UnitMode,
+  ): { countsKey: string; label: string } | null {
+    if (unit === "cd") {
+      const props = f.properties as CdProperties;
+      const key = cdKey(props.boro_cd);
+      if (!key) return null;
+      const [borough, cdNum] = key.split("-");
+      return { countsKey: key, label: `${borough} CD ${cdNum}` };
+    }
+    const props = f.properties as ZipProperties;
+    const zip = props.modzcta;
+    if (!zip) return null;
+    return { countsKey: zip, label: `Zip ${zip}` };
   }
 
-  const cdLayer = new GeoJsonLayer<CdProperties>({
-    id: "cd-layer",
-    data: cdBoundaries,
-    extruded: true,
-    wireframe: false,
-    pickable: true,
-    getElevation: (f: CdFeature) => {
-      const key = cdKey(f.properties.boro_cd);
-      if (!key) return 0;
-      return (counts.byCommunityDistrict[key]?.[selectedMonth] ?? 0) * ELEVATION_SCALE;
-    },
-    getFillColor: (f: CdFeature) => {
-      const key = cdKey(f.properties.boro_cd);
-      const count = key
-        ? (counts.byCommunityDistrict[key]?.[selectedMonth] ?? 0)
-        : 0;
-      return getColor(count, maxCount);
-    },
-    getLineColor: [80, 80, 100, 200],
-    material: { ambient: 0.6, diffuse: 0.6, shininess: 20 },
-  });
+  function countsForUnit(unit: UnitMode): Record<string, Record<string, number>> {
+    return unit === "cd" ? counts.byCommunityDistrict : counts.byZip;
+  }
 
-  new Deck({
+  // --- Layer builder ---
+  function buildLayer(month: string, unit: UnitMode): GeoJsonLayer {
+    const countsMap = countsForUnit(unit);
+    const maxCount = computeMaxCount(countsMap, month);
+    const data = unit === "cd" ? cdBoundaries : zipBoundaries;
+
+    return new GeoJsonLayer({
+      id: "area-layer",
+      data,
+      extruded: true,
+      wireframe: false,
+      pickable: true,
+      getElevation: (f: AreaFeature) => {
+        const resolved = resolveFeature(f, unit);
+        if (!resolved) return 0;
+        return (countsMap[resolved.countsKey]?.[month] ?? 0) * ELEVATION_SCALE;
+      },
+      getFillColor: (f: AreaFeature) => {
+        const resolved = resolveFeature(f, unit);
+        const count = resolved
+          ? (countsMap[resolved.countsKey]?.[month] ?? 0)
+          : 0;
+        return getColor(count, maxCount);
+      },
+      getLineColor: [80, 80, 100, 200],
+      material: { ambient: 0.6, diffuse: 0.6, shininess: 20 },
+      transitions: {
+        getElevation: { duration: 600, easing: (t: number) => t * (2 - t) },
+        getFillColor: { duration: 600 },
+      },
+    });
+  }
+
+  const tooltipStyle = {
+    fontFamily: "system-ui, sans-serif",
+    fontSize: "13px",
+    padding: "8px 12px",
+    background: "rgba(20, 20, 30, 0.92)",
+    color: "#fafafa",
+    borderRadius: "6px",
+    lineHeight: "1.4",
+    maxWidth: "240px",
+  };
+
+  // --- Deck instance ---
+  const deck = new Deck({
     parent: document.querySelector<HTMLDivElement>("#app")!,
     initialViewState: INITIAL_VIEW_STATE,
     controller: true,
-    layers: [cdLayer],
-    getTooltip: ({ object }: { object?: CdFeature }) => {
+    layers: [buildLayer(currentMonth, currentUnit)],
+    getTooltip: ({ object }: { object?: AreaFeature }) => {
       if (!object) return null;
-      const key = cdKey(object.properties.boro_cd);
-      if (!key) return null;
+      const resolved = resolveFeature(object, currentUnit);
+      if (!resolved) return null;
 
-      const count =
-        counts.byCommunityDistrict[key]?.[selectedMonth] ?? 0;
-      const [borough, cdNum] = key.split("-");
+      const countsMap = countsForUnit(currentUnit);
+      const count = countsMap[resolved.countsKey]?.[currentMonth] ?? 0;
 
       return {
-        html: `<strong>${borough} CD ${cdNum}</strong><br/>Shoots in ${selectedMonth}: ${count}`,
-        style: {
-          fontFamily: "system-ui, sans-serif",
-          fontSize: "13px",
-          padding: "8px 12px",
-          background: "rgba(20, 20, 30, 0.92)",
-          color: "#fafafa",
-          borderRadius: "6px",
-          lineHeight: "1.4",
-          maxWidth: "240px",
-        },
+        html: `<strong>${resolved.label}</strong><br/>Shoots in ${currentMonth}: ${count}`,
+        style: tooltipStyle,
       };
     },
     style: { background: "transparent" },
+  });
+
+  // --- Update layers ---
+  function updateLayers(): void {
+    monthLabel.textContent = currentMonth;
+    deck.setProps({ layers: [buildLayer(currentMonth, currentUnit)] });
+  }
+
+  // --- Slider input ---
+  slider.addEventListener("input", () => {
+    currentMonth = months[slider.valueAsNumber];
+    updateLayers();
+    if (playing) stopPlayback();
+  });
+
+  // --- Unit toggle ---
+  unitToggle.addEventListener("click", () => {
+    currentUnit = currentUnit === "cd" ? "zip" : "cd";
+    unitToggle.textContent = currentUnit === "cd" ? "CD" : "ZIP";
+    updateLayers();
+  });
+
+  // --- Play/pause ---
+  let playing = false;
+  let intervalId: ReturnType<typeof setInterval> | null = null;
+
+  function stopPlayback(): void {
+    playing = false;
+    playBtn.textContent = "\u25B6";
+    if (intervalId !== null) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  }
+
+  function startPlayback(): void {
+    playing = true;
+    playBtn.textContent = "\u23F8";
+    intervalId = setInterval(() => {
+      let idx = slider.valueAsNumber + 1;
+      if (idx >= months.length) {
+        idx = 0; // wrap to start
+      }
+      slider.value = String(idx);
+      currentMonth = months[idx];
+      updateLayers();
+    }, 1200);
+  }
+
+  playBtn.addEventListener("click", () => {
+    if (playing) {
+      stopPlayback();
+    } else {
+      startPlayback();
+    }
   });
 }
 
