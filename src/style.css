@@ -79,6 +79,11 @@ body {
   bottom: 16px;
   left: 24px;
   z-index: 1;
+  background: rgba(10, 10, 18, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 10px;
+  padding: 10px 14px 8px;
 }
 
 #timeline-label {
@@ -98,6 +103,7 @@ body {
   padding: 0 1px;
   border-left: 1px solid rgba(255, 255, 255, 0.3);
   border-right: 1px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   outline: none;
 }
 
@@ -120,6 +126,11 @@ body {
 
 .notch-active:hover {
   background: #ffd060;
+}
+
+#timeline-track:focus-visible {
+  outline: 2px solid #ffc83c;
+  outline-offset: 2px;
 }
 
 #timeline-years {
@@ -201,7 +212,7 @@ body {
 
 #attribution {
   position: fixed;
-  bottom: 16px;
+  bottom: 24px;
   right: 24px;
   font-size: 11px;
   opacity: 0.35;
@@ -427,9 +438,22 @@ body {
     gap: 6px;
   }
 
+  #unit-toggle,
+  #viz-toggle,
+  #grain-toggle {
+    font-size: 12px;
+    height: 30px;
+    padding: 0 10px;
+    min-width: 42px;
+  }
+
   #timeline {
     bottom: 10px;
-    left: 16px;
+    left: 12px;
+    right: 12px;
+    padding: 8px 10px 6px;
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
   }
 
   #timeline-track {
@@ -438,6 +462,10 @@ body {
 
   .notch {
     width: 3px;
+  }
+
+  .year-label {
+    font-size: 9px;
   }
 
   #legend {
