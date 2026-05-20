@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "data": "tsx scripts/pipeline.ts",
     "boundaries": "tsx scripts/boundaries.ts",
-    "captions": "tsx scripts/captions.ts"
+    "captions": "tsx scripts/captions.ts",
+    "blocks": "tsx scripts/blocks.ts"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.2",
@@ -18,6 +19,7 @@
     "@luma.gl/engine": "^9.3.3",
     "@luma.gl/webgl": "^9.3.3",
     "@anthropic-ai/sdk": "^0.39.0",
+    "@deck.gl/aggregation-layers": "^9.3.2",
     "deck.gl": "^9.3.2"
   },
   "devDependencies": {
