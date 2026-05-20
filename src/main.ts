@@ -608,8 +608,8 @@ async function main(): Promise<void> {
         getFillColor: [month, unit],
       },
       transitions: {
-        getElevation: { duration: 600, easing: (t: number) => t * (2 - t) },
-        getFillColor: { duration: 600 },
+        getElevation: { duration: 700, easing: (t: number) => 1 - Math.pow(1 - t, 3) },
+        getFillColor: { duration: 700 },
       },
     });
   }
@@ -653,8 +653,8 @@ async function main(): Promise<void> {
         getFillColor: [month, unit],
       },
       transitions: {
-        getRadius: { duration: 600, easing: (t: number) => t * (2 - t) },
-        getFillColor: { duration: 600 },
+        getRadius: { duration: 800, easing: (t: number) => t < 1 ? 1 - Math.pow(1 - t, 4) : 1 },
+        getFillColor: { duration: 700 },
       },
     });
   }
