@@ -197,7 +197,10 @@ body {
   user-select: none;
 }
 
-.toolbar-row:last-child {
+/* Hide the bottom border on rows that directly precede an expandable section,
+   since the expandable's own border-bottom provides the visual divider.
+   This replaces the broken :last-child rule (expandable divs sit between rows). */
+.toolbar-row:has(+ .toolbar-expandable) {
   border-bottom: none;
 }
 
@@ -241,13 +244,15 @@ body {
   font-family: var(--font-mono);
   font-weight: 600;
   height: 26px;
+  line-height: 1;
   border-radius: var(--radius-pill);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 var(--space-sm);
-  min-width: 42px;
+  padding: 0 var(--space-md);
+  min-width: 46px;
+  white-space: nowrap;
   transition: all var(--transition-fast);
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
@@ -294,7 +299,8 @@ body {
 }
 
 .toolbar-expandable-inner {
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md) var(--space-md) var(--space-sm);
+  border-top: 1px solid var(--color-border);
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs);
@@ -305,6 +311,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-xs);
+  align-items: stretch;
 }
 
 /* Category pills inside toolbar: smaller, compact */
@@ -322,6 +329,10 @@ body {
   padding: 4px 6px;
   text-align: center;
   width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Chevron indicator on expandable rows */
@@ -367,6 +378,11 @@ body {
   margin-bottom: var(--space-sm);
   text-align: center;
   letter-spacing: 0.03em;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 16px;
 }
 
 #timeline-track {
@@ -532,13 +548,14 @@ body {
   top: var(--space-md);
   left: calc(var(--space-md) + 18px);
   height: 100px;
-  /* Offset to match gradient top position: title height + margin + padding */
-  margin-top: calc(10px + var(--space-sm));
+  /* Offset to align with gradient: title line-height (~12px) + title margin-bottom (8px) */
+  margin-top: calc(12px + var(--space-sm));
   font-size: 10px;
   font-family: var(--font-mono);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--color-fg-muted);
+  line-height: 1;
 }
 
 
@@ -694,7 +711,8 @@ body {
   z-index: 1;
 }
 
-/* Panel entrance choreography — stagger children */
+/* Panel entrance choreography — stagger children, capped at 250ms
+   so panels with 7+ children don't feel sluggish on the last items. */
 #detail-panel.open > * {
   animation: panelSlideIn 400ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
@@ -703,7 +721,7 @@ body {
 #detail-panel.open > *:nth-child(3) { animation-delay: 150ms; }
 #detail-panel.open > *:nth-child(4) { animation-delay: 200ms; }
 #detail-panel.open > *:nth-child(5) { animation-delay: 250ms; }
-#detail-panel.open > *:nth-child(6) { animation-delay: 300ms; }
+#detail-panel.open > *:nth-child(n+6) { animation-delay: 250ms; }
 
 @keyframes panelSlideIn {
   from {
