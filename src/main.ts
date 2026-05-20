@@ -226,6 +226,63 @@ async function main(): Promise<void> {
   controls.append(unitToggle, vizToggle, playBtn, slider, monthLabel);
   document.body.appendChild(controls);
 
+  // --- Trends sparkline ---
+  const trends = document.createElement("div");
+  trends.id = "trends";
+  document.body.appendChild(trends);
+
+  const SPARK_W = 300;
+  const SPARK_H = 40;
+  const SPARK_PAD = 2;
+
+  function buildSparkline(): void {
+    const countsMap = computeFilteredCounts(currentUnit, activeCategories);
+    // Compute total shoots per month across all areas
+    const totals = months.map((m) => {
+      let sum = 0;
+      for (const areaCounts of Object.values(countsMap)) {
+        sum += areaCounts[m] ?? 0;
+      }
+      return sum;
+    });
+    const maxTotal = Math.max(...totals, 1);
+    const currentIdx = months.indexOf(currentMonth);
+
+    const stepX = (SPARK_W - SPARK_PAD * 2) / Math.max(months.length - 1, 1);
+
+    // Build SVG path for the area fill and line
+    const points = totals.map((t, i) => {
+      const x = SPARK_PAD + i * stepX;
+      const y = SPARK_H - SPARK_PAD - ((t / maxTotal) * (SPARK_H - SPARK_PAD * 2));
+      return { x, y };
+    });
+
+    const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+    const areaPath = `${linePath} L${points[points.length - 1].x},${SPARK_H - SPARK_PAD} L${points[0].x},${SPARK_H - SPARK_PAD} Z`;
+
+    const cx = currentIdx >= 0 ? points[currentIdx].x : 0;
+    const cy = currentIdx >= 0 ? points[currentIdx].y : 0;
+
+    trends.innerHTML = `<svg width="${SPARK_W}" height="${SPARK_H}" viewBox="0 0 ${SPARK_W} ${SPARK_H}">
+      <path d="${areaPath}" fill="#ffc83c" opacity="0.15"/>
+      <path d="${linePath}" fill="none" stroke="#ffc83c" stroke-width="1.5"/>
+      <circle cx="${cx}" cy="${cy}" r="3.5" fill="#ffc83c"/>
+    </svg>`;
+  }
+
+  // Click sparkline to scrub to that month
+  trends.addEventListener("click", (e: MouseEvent) => {
+    const rect = trends.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const stepX = (SPARK_W - SPARK_PAD * 2) / Math.max(months.length - 1, 1);
+    const idx = Math.round((x - SPARK_PAD) / stepX);
+    const clampedIdx = Math.max(0, Math.min(months.length - 1, idx));
+    slider.value = String(clampedIdx);
+    currentMonth = months[clampedIdx];
+    if (playing) stopPlayback();
+    updateLayers();
+  });
+
   // --- Title overlay ---
   const titleOverlay = document.createElement("div");
   titleOverlay.id = "title-overlay";
@@ -477,6 +534,9 @@ async function main(): Promise<void> {
     style: { background: "transparent" },
   });
 
+  // Build initial sparkline
+  buildSparkline();
+
   // --- Update layers ---
   function updateLayers(): void {
     monthLabel.textContent = formatMonth(currentMonth);
@@ -488,6 +548,7 @@ async function main(): Promise<void> {
       captionEl.textContent = text;
       captionEl.style.opacity = text ? "1" : "0";
     }
+    buildSparkline();
     deck.setProps({ layers: [buildVisualizationLayer(currentMonth, currentUnit)] });
   }
 

@@ -170,6 +170,26 @@ body {
   text-underline-offset: 2px;
 }
 
+/* --- Trends sparkline --- */
+
+#trends {
+  position: fixed;
+  bottom: 108px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+#trends:hover {
+  opacity: 1;
+}
+
+#trends svg {
+  display: block;
+}
+
 /* --- Caption --- */
 
 #caption {
@@ -278,5 +298,9 @@ body {
     left: 16px;
     font-size: 13px;
     max-width: 70vw;
+  }
+
+  #trends {
+    bottom: 100px;
   }
 }
