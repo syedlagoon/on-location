@@ -43,6 +43,7 @@
   --color-cat-still-photography: #f6b26b;
   --color-cat-music-video: #76a5af;
   --color-cat-documentary: #a4c2f4;
+  --color-cat-student: #d4a574;
 
   /* Typography */
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
@@ -589,10 +590,11 @@ body {
 .cat-pill[data-cat="Film"].cat-active { color: var(--color-cat-film); border-color: rgba(224, 102, 102, 0.4); background: rgba(224, 102, 102, 0.12); }
 .cat-pill[data-cat="Commercial"].cat-active { color: var(--color-cat-commercial); border-color: rgba(147, 196, 125, 0.4); background: rgba(147, 196, 125, 0.12); }
 .cat-pill[data-cat="Theater"].cat-active { color: var(--color-cat-theater); border-color: rgba(194, 123, 160, 0.4); background: rgba(194, 123, 160, 0.12); }
-.cat-pill[data-cat="WEB"].cat-active { color: var(--color-cat-web); border-color: rgba(142, 124, 195, 0.4); background: rgba(142, 124, 195, 0.12); }
+.cat-pill[data-cat="Web"].cat-active { color: var(--color-cat-web); border-color: rgba(142, 124, 195, 0.4); background: rgba(142, 124, 195, 0.12); }
 .cat-pill[data-cat="Still Photography"].cat-active { color: var(--color-cat-still-photography); border-color: rgba(246, 178, 107, 0.4); background: rgba(246, 178, 107, 0.12); }
 .cat-pill[data-cat="Music Video"].cat-active { color: var(--color-cat-music-video); border-color: rgba(118, 165, 175, 0.4); background: rgba(118, 165, 175, 0.12); }
 .cat-pill[data-cat="Documentary"].cat-active { color: var(--color-cat-documentary); border-color: rgba(164, 194, 244, 0.4); background: rgba(164, 194, 244, 0.12); }
+.cat-pill[data-cat="Student"].cat-active { color: var(--color-cat-student); border-color: rgba(212, 165, 116, 0.4); background: rgba(212, 165, 116, 0.12); }
 
 
 /* --- Detail panel --- */

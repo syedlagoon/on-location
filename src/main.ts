@@ -11,11 +11,11 @@ interface CountsData {
     generatedAt: string;
     totalShoots: number;
     dateRange: { min: string; max: string };
-    categories?: string[];
+    categories: string[];
   };
   byZip: Record<string, Record<string, number>>;
   byCommunityDistrict: Record<string, Record<string, number>>;
-  byCategory?: {
+  byCategory: {
     byZip: Record<string, Record<string, Record<string, number>>>;
     byCommunityDistrict: Record<string, Record<string, Record<string, number>>>;
   };
@@ -301,7 +301,7 @@ async function main(): Promise<void> {
     let categories: Set<string> | null = null;
     const catsParam = params.get("cats");
     if (catsParam !== undefined && catsParam !== "") {
-      const validCategories = counts.metadata.categories ?? [];
+      const validCategories = counts.metadata.categories;
       const requested = catsParam.split(",").filter((c) => validCategories.includes(c));
       if (requested.length > 0) {
         categories = new Set(requested);
@@ -628,7 +628,10 @@ async function main(): Promise<void> {
     unit: UnitMode,
     categories: Set<string> | null,
   ): Record<string, Record<string, number>> {
-    if (categories === null || !counts.byCategory) {
+    // When no categories are selected, return the pre-aggregated totals.
+    // This ensures backwards compatibility and avoids summing all byCategory
+    // entries (which would be equivalent but slower).
+    if (categories === null) {
       return unit === "cd" ? counts.byCommunityDistrict : counts.byZip;
     }
     const source = unit === "cd"

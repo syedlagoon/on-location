@@ -43,6 +43,8 @@ Living design document. All visual decisions, tokens, and rationale live here.
 | Web | `#8e7cc3` | Filter pill, detail stats |
 | Still Photography | `#f6b26b` | Filter pill, detail stats |
 | Music Video | `#76a5af` | Filter pill, detail stats |
+| Documentary | `#a4c2f4` | Filter pill, detail stats |
+| Student | `#d4a574` | Filter pill, detail stats |
 
 ## Typography
 
