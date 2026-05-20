@@ -11,6 +11,7 @@
     "boundaries": "tsx scripts/boundaries.ts",
     "captions": "tsx scripts/captions.ts",
     "blocks": "tsx scripts/blocks.ts",
+    "locations": "tsx scripts/locations.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
