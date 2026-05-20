@@ -349,7 +349,7 @@ async function main(): Promise<void> {
   const titleOverlay = document.createElement("div");
   titleOverlay.id = "title-overlay";
   titleOverlay.innerHTML =
-    `<h1>On Location</h1><p>NYC film &amp; TV permit activity, month by month</p>`;
+    `<h1>On Location</h1><span class="title-accent"></span><p>NYC film &amp; TV permit activity, month by month</p>`;
   document.body.appendChild(titleOverlay);
 
   // --- Caption ---
@@ -405,6 +405,7 @@ async function main(): Promise<void> {
       const pill = document.createElement("button");
       pill.textContent = cat;
       pill.classList.add("cat-pill");
+      pill.setAttribute("data-cat", cat);
       pill.addEventListener("click", () => {
         if (activeCategories === null) {
           activeCategories = new Set([cat]);
@@ -815,7 +816,7 @@ async function main(): Promise<void> {
       <div class="detail-section">
         <h3>Top months</h3>
         <ul class="detail-top-months">
-          ${monthEntries.map((e) => `<li><strong>${formatMonth(e.month)}</strong> \u2014 ${e.count} shoots</li>`).join("")}
+          ${monthEntries.map((e) => `<li><span>${formatMonth(e.month)}</span><span style="font-family:var(--font-mono);color:var(--color-fg-muted)">${e.count}</span></li>`).join("")}
         </ul>
       </div>
     `;
@@ -957,8 +958,9 @@ hero.id = "hero";
 if (!heroSeen) {
   hero.innerHTML = `
     <h1 class="hero-title">On Location</h1>
+    <span class="hero-accent"></span>
     <p class="hero-subtitle">NYC film &amp; TV permit activity, month by month</p>
-    <p class="hero-loading">Loading map&hellip;</p>
+    <p class="hero-loading">Loading</p>
   `;
   document.body.appendChild(hero);
 
