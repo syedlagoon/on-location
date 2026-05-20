@@ -1,6 +1,7 @@
 import "./style.css";
 import { Deck } from "@deck.gl/core";
 import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 import type { Feature, FeatureCollection, Geometry, Position, Polygon, MultiPolygon } from "geojson";
 
 // --- Types ---
@@ -39,6 +40,7 @@ type AreaFeature = CdFeature | ZipFeature;
 
 type UnitMode = "cd" | "zip";
 type VizMode = "bars" | "circles";
+type GrainMode = "area" | "block";
 
 interface CircleDataPoint {
   position: [number, number];
@@ -51,6 +53,22 @@ interface CaptionsData {
   metadata: { generatedAt: string; model: string };
   cd: Record<string, string>;
   zip: Record<string, string>;
+}
+
+interface BlockPoint {
+  lng: number;
+  lat: number;
+  months: Record<string, number>;
+}
+
+interface BlocksData {
+  metadata: { generatedAt: string; totalPoints: number; geocodeHitRate: number };
+  points: BlockPoint[];
+}
+
+interface HeatmapDataPoint {
+  position: [number, number];
+  weight: number;
 }
 
 
@@ -70,6 +88,14 @@ const INITIAL_VIEW_STATE = {
   zoom: 9.8,
   pitch: 45,
   bearing: 0,
+};
+
+const HERO_VIEW_STATE = {
+  longitude: -73.98,
+  latitude: 40.75,
+  zoom: 12,
+  pitch: 60,
+  bearing: -10,
 };
 
 const ELEVATION_SCALE = 150;
@@ -194,6 +220,9 @@ async function main(): Promise<void> {
   let currentUnit: UnitMode = "cd";
   let activeCategories: Set<string> | null = null;
   let currentVizMode: VizMode = "bars";
+  let currentGrain: GrainMode = "area";
+  let blocksData: BlocksData | null = null;
+  let blocksLoading = false;
 
   // --- Build controls UI ---
   const controls = document.createElement("div");
@@ -223,7 +252,12 @@ async function main(): Promise<void> {
   vizToggle.textContent = "|||";
   vizToggle.title = "Toggle bars / circles";
 
-  controls.append(unitToggle, vizToggle, playBtn, slider, monthLabel);
+  const grainToggle = document.createElement("button");
+  grainToggle.id = "grain-toggle";
+  grainToggle.textContent = "Block";
+  grainToggle.title = "Toggle block-level heatmap";
+
+  controls.append(unitToggle, vizToggle, grainToggle, playBtn, slider, monthLabel);
   document.body.appendChild(controls);
 
   // --- Trends sparkline ---
@@ -497,6 +531,71 @@ async function main(): Promise<void> {
       : buildCircleLayer(month, unit);
   }
 
+  // --- Heatmap layer for block-level grain ---
+  function buildHeatmapLayer(month: string): HeatmapLayer<HeatmapDataPoint> | null {
+    if (!blocksData) return null;
+
+    const data: HeatmapDataPoint[] = [];
+    for (const pt of blocksData.points) {
+      const weight = pt.months[month] ?? 0;
+      if (weight > 0) {
+        data.push({ position: [pt.lng, pt.lat], weight });
+      }
+    }
+
+    return new HeatmapLayer<HeatmapDataPoint>({
+      id: "block-heatmap",
+      data,
+      getPosition: (d: HeatmapDataPoint) => d.position,
+      getWeight: (d: HeatmapDataPoint) => d.weight,
+      radiusPixels: 40,
+      intensity: 1,
+      threshold: 0.05,
+      colorRange: [
+        [40, 40, 80],
+        [80, 60, 120],
+        [160, 100, 80],
+        [220, 160, 60],
+        [255, 200, 60],
+        [255, 240, 140],
+      ],
+    });
+  }
+
+  /** Lazy-load blocks.json. Returns true if data is (now) available. */
+  async function ensureBlocksData(): Promise<boolean> {
+    if (blocksData) return true;
+    if (blocksLoading) return false;
+    blocksLoading = true;
+    try {
+      const res = await fetch("/data/blocks.json");
+      if (!res.ok) {
+        console.warn(`blocks.json not found (${res.status}). Run "npm run blocks" to generate it.`);
+        blocksLoading = false;
+        return false;
+      }
+      blocksData = (await res.json()) as BlocksData;
+      console.log(
+        `Loaded blocks.json: ${blocksData.metadata.totalPoints} points, ` +
+        `${(blocksData.metadata.geocodeHitRate * 100).toFixed(1)}% hit rate`,
+      );
+      return true;
+    } catch (err) {
+      console.warn("Failed to load blocks.json:", err);
+      blocksLoading = false;
+      return false;
+    }
+  }
+
+  /** Show/hide area-mode controls based on grain mode. */
+  function setAreaControlsVisible(visible: boolean): void {
+    const display = visible ? "" : "none";
+    unitToggle.style.display = display;
+    vizToggle.style.display = display;
+    legend.style.display = visible ? "block" : "none";
+    filterBar.style.display = visible ? "flex" : "none";
+  }
+
   const tooltipStyle = {
     fontFamily: "system-ui, sans-serif",
     fontSize: "13px",
@@ -511,10 +610,12 @@ async function main(): Promise<void> {
   // --- Deck instance ---
   const deck = new Deck({
     parent: document.querySelector<HTMLDivElement>("#app")!,
-    initialViewState: INITIAL_VIEW_STATE,
+    initialViewState: heroSeen ? INITIAL_VIEW_STATE : HERO_VIEW_STATE,
     controller: true,
     layers: [buildVisualizationLayer(currentMonth, currentUnit)],
     getTooltip: ({ object }: { object?: AreaFeature | CircleDataPoint }) => {
+      // No tooltip in block heatmap mode
+      if (currentGrain === "block") return null;
       if (!object) return null;
 
       let label: string;
@@ -540,6 +641,8 @@ async function main(): Promise<void> {
       };
     },
     onClick: ({ object }: { object?: AreaFeature | CircleDataPoint }) => {
+      // No detail panel in block heatmap mode
+      if (currentGrain === "block") return;
       if (!object) {
         if (detailOpen) closeDetail();
         return;
@@ -570,6 +673,39 @@ async function main(): Promise<void> {
 
   // Build initial sparkline
   buildSparkline();
+
+  // --- Hero dismiss (cinematic pull-back) ---
+  function dismissHero(): void {
+    if (heroDismissed) return;
+    heroDismissed = true;
+    sessionStorage.setItem("heroShown", "1");
+    hero.classList.add("hero-fade");
+    // Cinematic pull-back to overview
+    deck.setProps({
+      initialViewState: {
+        ...INITIAL_VIEW_STATE,
+        transitionDuration: 2000,
+      },
+    });
+    setTimeout(() => hero.remove(), 800);
+  }
+
+  if (!heroSeen) {
+    // If user already skipped (before deck was ready), trigger pull-back now
+    if (heroDismissed) {
+      deck.setProps({
+        initialViewState: {
+          ...INITIAL_VIEW_STATE,
+          transitionDuration: 2000,
+        },
+      });
+    } else {
+      // Allow skip handler to trigger the pull-back
+      onHeroSkip = dismissHero;
+      // Auto-dismiss hero after 2s (map is already loaded at this point)
+      setTimeout(dismissHero, 2000);
+    }
+  }
 
   function openDetail(countsKey: string, label: string, centroid: [number, number]): void {
     detailAreaKey = countsKey;
@@ -681,6 +817,17 @@ async function main(): Promise<void> {
   // --- Update layers ---
   function updateLayers(): void {
     monthLabel.textContent = formatMonth(currentMonth);
+
+    if (currentGrain === "block") {
+      // In block mode, hide captions and just render the heatmap
+      captionEl.style.opacity = "0";
+      const heatmap = buildHeatmapLayer(currentMonth);
+      deck.setProps({ layers: heatmap ? [heatmap] : [] });
+      buildSparkline();
+      return;
+    }
+
+    // Area mode — original behavior
     const maxCount = computeMaxCount(computeFilteredCounts(currentUnit, activeCategories), currentMonth);
     legendMax.textContent = String(maxCount);
     if (captions) {
@@ -728,6 +875,35 @@ async function main(): Promise<void> {
     currentVizMode = currentVizMode === "bars" ? "circles" : "bars";
     vizToggle.textContent = currentVizMode === "bars" ? "|||" : "\u25CF";
     updateLayers();
+  });
+
+  // --- Grain toggle (area <-> block heatmap) ---
+  grainToggle.addEventListener("click", async () => {
+    if (currentGrain === "area") {
+      // Switch to block mode — lazy-load blocks.json
+      const loaded = await ensureBlocksData();
+      if (!loaded) return;
+
+      currentGrain = "block";
+      grainToggle.classList.add("grain-active");
+
+      // Hide area-mode-only controls
+      setAreaControlsVisible(false);
+
+      // Close detail panel if open (not applicable in block mode)
+      if (detailOpen) closeDetail();
+
+      updateLayers();
+    } else {
+      // Switch back to area mode
+      currentGrain = "area";
+      grainToggle.classList.remove("grain-active");
+
+      // Restore area-mode controls
+      setAreaControlsVisible(true);
+
+      updateLayers();
+    }
   });
 
   // --- Play/pause ---
@@ -793,6 +969,41 @@ async function main(): Promise<void> {
       updateLayers();
     }
   });
+}
+
+// --- Hero intro setup (runs synchronously before main) ---
+
+const heroSeen = sessionStorage.getItem("heroShown") === "1";
+let heroDismissed = heroSeen;
+
+// Callback set by main() once the deck is ready, so early skips can trigger the pull-back.
+let onHeroSkip: (() => void) | null = null;
+
+const hero = document.createElement("div");
+hero.id = "hero";
+
+if (!heroSeen) {
+  hero.innerHTML = `
+    <h1 class="hero-title">On Location</h1>
+    <p class="hero-subtitle">NYC film &amp; TV permit activity, month by month</p>
+    <p class="hero-loading">Loading map&hellip;</p>
+  `;
+  document.body.appendChild(hero);
+
+  // Skip hero on click or keypress
+  function skipHero(): void {
+    if (heroDismissed) return;
+    heroDismissed = true;
+    sessionStorage.setItem("heroShown", "1");
+    hero.classList.add("hero-fade");
+    setTimeout(() => hero.remove(), 800);
+    hero.removeEventListener("click", skipHero);
+    document.removeEventListener("keydown", skipHero);
+    // Trigger pull-back if deck is ready
+    if (onHeroSkip) onHeroSkip();
+  }
+  hero.addEventListener("click", skipHero);
+  document.addEventListener("keydown", skipHero);
 }
 
 main();
