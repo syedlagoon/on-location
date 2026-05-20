@@ -34,8 +34,9 @@ body {
 
 #toolbar {
   position: fixed;
-  bottom: 100px;
-  left: 24px;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -77,7 +78,10 @@ body {
 #timeline {
   position: fixed;
   bottom: 16px;
-  left: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  max-width: 800px;
   z-index: 1;
   background: rgba(10, 10, 18, 0.65);
   backdrop-filter: blur(12px);
@@ -93,6 +97,7 @@ body {
   opacity: 0.8;
   margin-bottom: 6px;
   font-weight: 600;
+  text-align: center;
 }
 
 #timeline-track {
@@ -108,7 +113,8 @@ body {
 }
 
 .notch {
-  width: 4px;
+  flex: 1;
+  min-width: 3px;
   min-height: 4px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 1px 1px 0 0;
@@ -245,13 +251,15 @@ body {
 
 #category-filter {
   position: fixed;
-  bottom: 140px;
-  left: 24px;
+  bottom: 160px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
   z-index: 1;
-  max-width: 400px;
+  max-width: 600px;
 }
 
 .cat-pill {
@@ -433,8 +441,7 @@ body {
   }
 
   #toolbar {
-    bottom: 88px;
-    left: 16px;
+    bottom: 100px;
     gap: 6px;
   }
 
@@ -449,8 +456,7 @@ body {
 
   #timeline {
     bottom: 10px;
-    left: 12px;
-    right: 12px;
+    width: 90%;
     padding: 8px 10px 6px;
     max-width: calc(100vw - 24px);
     overflow-x: auto;
@@ -461,7 +467,7 @@ body {
   }
 
   .notch {
-    width: 3px;
+    min-width: 2px;
   }
 
   .year-label {
@@ -481,8 +487,7 @@ body {
   }
 
   #category-filter {
-    bottom: 124px;
-    left: 16px;
+    bottom: 136px;
     gap: 4px;
     max-width: calc(100vw - 32px);
   }

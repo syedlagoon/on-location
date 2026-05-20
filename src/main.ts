@@ -502,6 +502,10 @@ async function main(): Promise<void> {
       },
       getLineColor: [80, 80, 100, 200],
       material: { ambient: 0.6, diffuse: 0.6, shininess: 20 },
+      updateTriggers: {
+        getElevation: [month, unit],
+        getFillColor: [month, unit],
+      },
       transitions: {
         getElevation: { duration: 600, easing: (t: number) => t * (2 - t) },
         getFillColor: { duration: 600 },
@@ -543,6 +547,10 @@ async function main(): Promise<void> {
       getLineColor: [255, 255, 255, 80],
       lineWidthMinPixels: 1,
       radiusUnits: "meters" as const,
+      updateTriggers: {
+        getRadius: [month, unit],
+        getFillColor: [month, unit],
+      },
       transitions: {
         getRadius: { duration: 600, easing: (t: number) => t * (2 - t) },
         getFillColor: { duration: 600 },
@@ -636,7 +644,7 @@ async function main(): Promise<void> {
   const deck = new Deck({
     parent: document.querySelector<HTMLDivElement>("#app")!,
     initialViewState: heroSeen ? INITIAL_VIEW_STATE : HERO_VIEW_STATE,
-    controller: true,
+    controller: false,
     layers: [buildVisualizationLayer(currentMonth, currentUnit)],
     getTooltip: ({ object }: { object?: AreaFeature | CircleDataPoint }) => {
       // No tooltip in block heatmap mode
@@ -731,21 +739,9 @@ async function main(): Promise<void> {
     }
   }
 
-  function openDetail(countsKey: string, label: string, centroid: [number, number]): void {
+  function openDetail(countsKey: string, label: string, _centroid: [number, number]): void {
     detailAreaKey = countsKey;
     detailOpen = true;
-
-    // Fly to the area
-    deck.setProps({
-      initialViewState: {
-        longitude: centroid[0],
-        latitude: centroid[1],
-        zoom: 13,
-        pitch: 45,
-        bearing: 0,
-        transitionDuration: 1200,
-      },
-    });
 
     // Build panel content
     const countsMap = computeFilteredCounts(currentUnit, activeCategories);
@@ -827,14 +823,6 @@ async function main(): Promise<void> {
     detailOpen = false;
     detailAreaKey = null;
     detailPanel.classList.remove("open");
-
-    // Fly back to overview
-    deck.setProps({
-      initialViewState: {
-        ...INITIAL_VIEW_STATE,
-        transitionDuration: 1000,
-      },
-    });
   }
 
 
