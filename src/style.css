@@ -30,22 +30,18 @@ body {
   line-height: 1.4;
 }
 
-#controls {
+/* --- Toolbar (toggle buttons) --- */
+
+#toolbar {
   position: fixed;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 100px;
+  left: 24px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 20px;
-  background: rgba(20, 20, 30, 0.85);
-  border-radius: 10px;
-  backdrop-filter: blur(8px);
+  gap: 8px;
   z-index: 1;
 }
 
-#play-btn,
 #unit-toggle,
 #viz-toggle,
 #grain-toggle {
@@ -61,21 +57,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-#play-btn {
-  width: 36px;
-  font-size: 16px;
-}
-
-#unit-toggle,
-#viz-toggle,
-#grain-toggle {
   padding: 0 14px;
   min-width: 52px;
 }
 
-#play-btn:hover,
 #unit-toggle:hover,
 #viz-toggle:hover,
 #grain-toggle:hover {
@@ -87,17 +72,68 @@ body {
   border-color: rgba(255, 200, 60, 0.6);
 }
 
-#month-slider {
-  width: 300px;
-  accent-color: #ffc83c;
+/* --- Notch timeline --- */
+
+#timeline {
+  position: fixed;
+  bottom: 16px;
+  left: 24px;
+  z-index: 1;
 }
 
-#month-label {
-  color: #fafafa;
-  font-family: system-ui, sans-serif;
-  font-size: 14px;
+#timeline-label {
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
-  min-width: 6.5em;
+  color: #fafafa;
+  opacity: 0.8;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+#timeline-track {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 48px;
+  padding: 0 1px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  outline: none;
+}
+
+.notch {
+  width: 4px;
+  min-height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 1px 1px 0 0;
+  cursor: pointer;
+  transition: background 0.15s ease, height 0.3s ease;
+}
+
+.notch:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.notch-active {
+  background: #ffc83c;
+}
+
+.notch-active:hover {
+  background: #ffd060;
+}
+
+#timeline-years {
+  position: relative;
+  height: 16px;
+  margin-top: 4px;
+}
+
+.year-label {
+  position: absolute;
+  font-size: 10px;
+  opacity: 0.4;
+  transform: translateX(-50%);
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Title overlay --- */
@@ -165,7 +201,7 @@ body {
 
 #attribution {
   position: fixed;
-  bottom: 72px;
+  bottom: 16px;
   right: 24px;
   font-size: 11px;
   opacity: 0.35;
@@ -176,26 +212,6 @@ body {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
-}
-
-/* --- Trends sparkline --- */
-
-#trends {
-  position: fixed;
-  bottom: 108px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
-  opacity: 0.7;
-  cursor: pointer;
-}
-
-#trends:hover {
-  opacity: 1;
-}
-
-#trends svg {
-  display: block;
 }
 
 /* --- Caption --- */
@@ -218,14 +234,13 @@ body {
 
 #category-filter {
   position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 140px;
+  left: 24px;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 6px;
   z-index: 1;
+  max-width: 400px;
 }
 
 .cat-pill {
@@ -406,16 +421,23 @@ body {
     font-size: 12px;
   }
 
-  #controls {
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: calc(100vw - 32px);
-    padding: 8px 14px;
-    gap: 8px;
+  #toolbar {
+    bottom: 88px;
+    left: 16px;
+    gap: 6px;
   }
 
-  #month-slider {
-    width: 160px;
+  #timeline {
+    bottom: 10px;
+    left: 16px;
+  }
+
+  #timeline-track {
+    height: 36px;
+  }
+
+  .notch {
+    width: 3px;
   }
 
   #legend {
@@ -431,7 +453,8 @@ body {
   }
 
   #category-filter {
-    bottom: 74px;
+    bottom: 124px;
+    left: 16px;
     gap: 4px;
     max-width: calc(100vw - 32px);
   }
@@ -446,10 +469,6 @@ body {
     left: 16px;
     font-size: 13px;
     max-width: 70vw;
-  }
-
-  #trends {
-    bottom: 100px;
   }
 
   #detail-panel {

@@ -226,28 +226,13 @@ async function main(): Promise<void> {
   let blocksData: BlocksData | null = null;
   let blocksLoading = false;
 
-  // --- Build controls UI ---
-  const controls = document.createElement("div");
-  controls.id = "controls";
+  // Track current month index for easier navigation
+  let currentMonthIdx = months.indexOf(currentMonth);
 
+  // --- Build toggle buttons ---
   const unitToggle = document.createElement("button");
   unitToggle.id = "unit-toggle";
   unitToggle.textContent = "CD";
-
-  const playBtn = document.createElement("button");
-  playBtn.id = "play-btn";
-  playBtn.textContent = "\u25B6";
-
-  const slider = document.createElement("input");
-  slider.id = "month-slider";
-  slider.type = "range";
-  slider.min = "0";
-  slider.max = String(months.length - 1);
-  slider.value = String(months.length - 1);
-
-  const monthLabel = document.createElement("span");
-  monthLabel.id = "month-label";
-  monthLabel.textContent = formatMonth(currentMonth);
 
   const vizToggle = document.createElement("button");
   vizToggle.id = "viz-toggle";
@@ -259,65 +244,101 @@ async function main(): Promise<void> {
   grainToggle.textContent = "Block";
   grainToggle.title = "Toggle block-level heatmap";
 
-  controls.append(unitToggle, vizToggle, grainToggle, playBtn, slider, monthLabel);
-  document.body.appendChild(controls);
+  // --- Build toolbar (toggle buttons only) ---
+  const toolbar = document.createElement("div");
+  toolbar.id = "toolbar";
+  toolbar.append(unitToggle, vizToggle, grainToggle);
+  document.body.appendChild(toolbar);
 
-  // --- Trends sparkline ---
-  const trends = document.createElement("div");
-  trends.id = "trends";
-  document.body.appendChild(trends);
+  // --- Build notch timeline ---
+  const timeline = document.createElement("div");
+  timeline.id = "timeline";
 
-  const SPARK_W = 300;
-  const SPARK_H = 40;
-  const SPARK_PAD = 2;
+  const timelineLabel = document.createElement("div");
+  timelineLabel.id = "timeline-label";
+  timelineLabel.textContent = formatMonth(currentMonth);
 
-  function buildSparkline(): void {
+  const timelineTrack = document.createElement("div");
+  timelineTrack.id = "timeline-track";
+  timelineTrack.setAttribute("role", "slider");
+  timelineTrack.setAttribute("aria-label", "Month timeline");
+  timelineTrack.setAttribute("aria-valuemin", "0");
+  timelineTrack.setAttribute("aria-valuemax", String(months.length - 1));
+  timelineTrack.setAttribute("aria-valuenow", String(currentMonthIdx));
+  timelineTrack.setAttribute("tabindex", "0");
+
+  const notchElements: HTMLDivElement[] = [];
+
+  function computeMonthTotals(): number[] {
     const countsMap = computeFilteredCounts(currentUnit, activeCategories);
-    // Compute total shoots per month across all areas
-    const totals = months.map((m) => {
+    return months.map((m) => {
       let sum = 0;
       for (const areaCounts of Object.values(countsMap)) {
         sum += areaCounts[m] ?? 0;
       }
       return sum;
     });
-    const maxTotal = Math.max(...totals, 1);
-    const currentIdx = months.indexOf(currentMonth);
-
-    const stepX = (SPARK_W - SPARK_PAD * 2) / Math.max(months.length - 1, 1);
-
-    // Build SVG path for the area fill and line
-    const points = totals.map((t, i) => {
-      const x = SPARK_PAD + i * stepX;
-      const y = SPARK_H - SPARK_PAD - ((t / maxTotal) * (SPARK_H - SPARK_PAD * 2));
-      return { x, y };
-    });
-
-    const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
-    const areaPath = `${linePath} L${points[points.length - 1].x},${SPARK_H - SPARK_PAD} L${points[0].x},${SPARK_H - SPARK_PAD} Z`;
-
-    const cx = currentIdx >= 0 ? points[currentIdx].x : 0;
-    const cy = currentIdx >= 0 ? points[currentIdx].y : 0;
-
-    trends.innerHTML = `<svg width="${SPARK_W}" height="${SPARK_H}" viewBox="0 0 ${SPARK_W} ${SPARK_H}">
-      <path d="${areaPath}" fill="#ffc83c" opacity="0.15"/>
-      <path d="${linePath}" fill="none" stroke="#ffc83c" stroke-width="1.5"/>
-      <circle cx="${cx}" cy="${cy}" r="3.5" fill="#ffc83c"/>
-    </svg>`;
   }
 
-  // Click sparkline to scrub to that month
-  trends.addEventListener("click", (e: MouseEvent) => {
-    const rect = trends.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const stepX = (SPARK_W - SPARK_PAD * 2) / Math.max(months.length - 1, 1);
-    const idx = Math.round((x - SPARK_PAD) / stepX);
-    const clampedIdx = Math.max(0, Math.min(months.length - 1, idx));
-    slider.value = String(clampedIdx);
-    currentMonth = months[clampedIdx];
-    if (playing) stopPlayback();
-    updateLayers();
-  });
+  function buildNotches(): void {
+    timelineTrack.innerHTML = "";
+    notchElements.length = 0;
+    const totals = computeMonthTotals();
+    const maxTotal = Math.max(...totals, 1);
+
+    for (let i = 0; i < months.length; i++) {
+      const notch = document.createElement("div");
+      notch.className = "notch";
+      const heightPct = Math.max(8, (totals[i] / maxTotal) * 100); // min 8% so empty months are still visible
+      notch.style.height = `${heightPct}%`;
+      notch.title = `${formatMonth(months[i])}: ${totals[i]} shoots`;
+
+      if (i === currentMonthIdx) {
+        notch.classList.add("notch-active");
+      }
+
+      const idx = i; // capture for closure
+      notch.addEventListener("click", () => {
+        currentMonthIdx = idx;
+        currentMonth = months[idx];
+        updateActiveNotch();
+        updateLayers();
+      });
+
+      timelineTrack.appendChild(notch);
+      notchElements.push(notch);
+    }
+  }
+
+  // Year labels
+  const yearLabels = document.createElement("div");
+  yearLabels.id = "timeline-years";
+  const seenYears = new Set<string>();
+  for (let i = 0; i < months.length; i++) {
+    const year = months[i].split("-")[0];
+    if (!seenYears.has(year)) {
+      seenYears.add(year);
+      const label = document.createElement("span");
+      label.className = "year-label";
+      label.textContent = year;
+      // Position proportionally
+      label.style.left = `${(i / Math.max(months.length - 1, 1)) * 100}%`;
+      yearLabels.appendChild(label);
+    }
+  }
+
+  timeline.append(timelineLabel, timelineTrack, yearLabels);
+  document.body.appendChild(timeline);
+
+  buildNotches();
+
+  function updateActiveNotch(): void {
+    for (let i = 0; i < notchElements.length; i++) {
+      notchElements[i].classList.toggle("notch-active", i === currentMonthIdx);
+    }
+    timelineLabel.textContent = formatMonth(currentMonth);
+    timelineTrack.setAttribute("aria-valuenow", String(currentMonthIdx));
+  }
 
   // --- Title overlay ---
   const titleOverlay = document.createElement("div");
@@ -370,6 +391,7 @@ async function main(): Promise<void> {
       activeCategories = null;
       filterBar.querySelectorAll(".cat-pill").forEach((el) => el.classList.remove("cat-active"));
       allBtn.classList.add("cat-active");
+      buildNotches();
       updateLayers();
     });
     filterBar.appendChild(allBtn);
@@ -396,6 +418,7 @@ async function main(): Promise<void> {
             el.classList.toggle("cat-active", activeCategories !== null && activeCategories.has(text!));
           }
         });
+        buildNotches();
         updateLayers();
       });
       filterBar.appendChild(pill);
@@ -673,8 +696,7 @@ async function main(): Promise<void> {
     style: { background: "transparent" },
   });
 
-  // Build initial sparkline
-  buildSparkline();
+  // (timeline notches already built above)
 
   // --- Hero dismiss (cinematic pull-back) ---
   function dismissHero(): void {
@@ -818,14 +840,13 @@ async function main(): Promise<void> {
 
   // --- Update layers ---
   function updateLayers(): void {
-    monthLabel.textContent = formatMonth(currentMonth);
+    updateActiveNotch();
 
     if (currentGrain === "block") {
       // In block mode, hide captions and just render the heatmap
       captionEl.style.opacity = "0";
       const heatmap = buildHeatmapLayer(currentMonth);
       deck.setProps({ layers: heatmap ? [heatmap] : [] });
-      buildSparkline();
       return;
     }
 
@@ -838,7 +859,6 @@ async function main(): Promise<void> {
       captionEl.textContent = text;
       captionEl.style.opacity = text ? "1" : "0";
     }
-    buildSparkline();
     // Refresh detail panel if open
     if (detailOpen && detailAreaKey) {
       const countsMap = computeFilteredCounts(currentUnit, activeCategories);
@@ -858,17 +878,11 @@ async function main(): Promise<void> {
     deck.setProps({ layers: [buildVisualizationLayer(currentMonth, currentUnit)] });
   }
 
-  // --- Slider input ---
-  slider.addEventListener("input", () => {
-    currentMonth = months[slider.valueAsNumber];
-    updateLayers();
-    if (playing) stopPlayback();
-  });
-
   // --- Unit toggle ---
   unitToggle.addEventListener("click", () => {
     currentUnit = currentUnit === "cd" ? "zip" : "cd";
     unitToggle.textContent = currentUnit === "cd" ? "CD" : "ZIP";
+    buildNotches();
     updateLayers();
   });
 
@@ -908,41 +922,6 @@ async function main(): Promise<void> {
     }
   });
 
-  // --- Play/pause ---
-  let playing = false;
-  let intervalId: ReturnType<typeof setInterval> | null = null;
-
-  function stopPlayback(): void {
-    playing = false;
-    playBtn.textContent = "\u25B6";
-    if (intervalId !== null) {
-      clearInterval(intervalId);
-      intervalId = null;
-    }
-  }
-
-  function startPlayback(): void {
-    playing = true;
-    playBtn.textContent = "\u23F8";
-    intervalId = setInterval(() => {
-      let idx = slider.valueAsNumber + 1;
-      if (idx >= months.length) {
-        idx = 0; // wrap to start
-      }
-      slider.value = String(idx);
-      currentMonth = months[idx];
-      updateLayers();
-    }, 1200);
-  }
-
-  playBtn.addEventListener("click", () => {
-    if (playing) {
-      stopPlayback();
-    } else {
-      startPlayback();
-    }
-  });
-
   // --- Keyboard shortcuts ---
   document.addEventListener("keydown", (e: KeyboardEvent) => {
     if (e.key === "Escape") {
@@ -950,25 +929,20 @@ async function main(): Promise<void> {
       return;
     }
 
-    if (e.key === " ") {
-      e.preventDefault();
-      if (playing) {
-        stopPlayback();
-      } else {
-        startPlayback();
+    if (e.key === "ArrowLeft") {
+      if (currentMonthIdx > 0) {
+        currentMonthIdx--;
+        currentMonth = months[currentMonthIdx];
+        updateActiveNotch();
+        updateLayers();
       }
-    } else if (e.key === "ArrowLeft") {
-      if (playing) stopPlayback();
-      const idx = Math.max(0, slider.valueAsNumber - 1);
-      slider.value = String(idx);
-      currentMonth = months[idx];
-      updateLayers();
     } else if (e.key === "ArrowRight") {
-      if (playing) stopPlayback();
-      const idx = Math.min(months.length - 1, slider.valueAsNumber + 1);
-      slider.value = String(idx);
-      currentMonth = months[idx];
-      updateLayers();
+      if (currentMonthIdx < months.length - 1) {
+        currentMonthIdx++;
+        currentMonth = months[currentMonthIdx];
+        updateActiveNotch();
+        updateLayers();
+      }
     }
   });
 }
