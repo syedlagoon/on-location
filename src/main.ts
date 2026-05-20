@@ -531,6 +531,52 @@ async function main(): Promise<void> {
     return result;
   }
 
+  // --- Base boundary layer: flat outline of NYC areas, always visible ---
+  // Renders a subtle filled + stroked geography underneath the data layers
+  // (bars, circles, or heatmap). Styling goal: clearly define NYC's shape
+  // and area divisions without competing with the data on top.
+  function buildBaseLayer(unit: UnitMode): GeoJsonLayer {
+    const data = unit === "cd" ? cdBoundaries : zipBoundaries;
+
+    // Dark navy fill — slightly lighter than the page background (#0a0a0a)
+    // to make the NYC landmass visible against the void. The indigo tint
+    // (blue channel higher) gives a subtle geographic feel.
+    const fillColor: [number, number, number, number] = [12, 12, 28, 180];
+
+    // Border lines — thin white at low opacity, matching the design system's
+    // --color-border (rgba 255,255,255 @ 0.08–0.15). Zip codes get slightly
+    // more transparent borders since there are many more of them (~180 vs ~59).
+    const lineColor: [number, number, number, number] =
+      unit === "cd" ? [255, 255, 255, 38] : [255, 255, 255, 25];
+    //                 ~0.15 opacity (CD)    ~0.10 opacity (ZIP)
+
+    // Line width: CDs get 1px borders, ZIPs get 0.5px to avoid visual noise
+    // from the denser zip-code grid.
+    const lineWidth = unit === "cd" ? 1 : 0.5;
+
+    return new GeoJsonLayer({
+      id: "base-boundary",
+      data,
+      extruded: false,
+      // Not pickable — hover/click are handled by the data layers on top
+      // (extruded bars, circles, or heatmap). Making this pickable would
+      // cause confusing double-hover in bars mode (same polygons) or steal
+      // events from circles/heatmap.
+      pickable: false,
+      stroked: true,
+      filled: true,
+      getFillColor: fillColor,
+      getLineColor: lineColor,
+      lineWidthMinPixels: lineWidth,
+      updateTriggers: {
+        // Rebuild when unit changes — different boundary GeoJSON,
+        // different line colors, and different line widths.
+        getFillColor: [unit],
+        getLineColor: [unit],
+      },
+    });
+  }
+
   // --- Layer builder ---
   function buildLayer(month: string, unit: UnitMode): GeoJsonLayer {
     const countsMap = computeFilteredCounts(unit, activeCategories);
@@ -613,10 +659,14 @@ async function main(): Promise<void> {
     });
   }
 
-  function buildVisualizationLayer(month: string, unit: UnitMode): GeoJsonLayer | ScatterplotLayer {
-    return currentVizMode === "bars"
-      ? buildLayer(month, unit)
-      : buildCircleLayer(month, unit);
+  /** Build all layers for the current viz mode. Base boundary always included. */
+  function buildVisualizationLayers(month: string, unit: UnitMode): (GeoJsonLayer | ScatterplotLayer)[] {
+    const base = buildBaseLayer(unit);
+    if (currentVizMode === "bars") {
+      return [base, buildLayer(month, unit)];
+    }
+    // Circles: base boundaries underneath, circles on top
+    return [base, buildCircleLayer(month, unit)];
   }
 
   // --- Heatmap layer for block-level grain ---
@@ -713,7 +763,7 @@ async function main(): Promise<void> {
     parent: document.querySelector<HTMLDivElement>("#app")!,
     initialViewState: heroSeen ? INITIAL_VIEW_STATE : HERO_VIEW_STATE,
     controller: lockedController,
-    layers: [buildVisualizationLayer(currentMonth, currentUnit)],
+    layers: buildVisualizationLayers(currentMonth, currentUnit),
     getTooltip: ({ object }: { object?: AreaFeature | CircleDataPoint }) => {
       // No tooltip in block heatmap mode
       if (currentGrain === "block") return null;
@@ -922,7 +972,8 @@ async function main(): Promise<void> {
       // In block mode, hide captions and just render the heatmap
       captionEl.style.opacity = "0";
       const heatmap = buildHeatmapLayer(currentMonth);
-      deck.setProps({ layers: heatmap ? [heatmap] : [] });
+      const base = buildBaseLayer(currentUnit);
+      deck.setProps({ layers: heatmap ? [base, heatmap] : [base] });
       return;
     }
 
@@ -952,7 +1003,7 @@ async function main(): Promise<void> {
       }
     }
 
-    deck.setProps({ layers: [buildVisualizationLayer(currentMonth, currentUnit)] });
+    deck.setProps({ layers: buildVisualizationLayers(currentMonth, currentUnit) });
   }
 
   // --- Unit toggle ---
