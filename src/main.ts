@@ -367,6 +367,14 @@ async function main(): Promise<void> {
     document.body.appendChild(filterBar);
   }
 
+
+  // --- Detail panel ---
+  const detailPanel = document.createElement("div");
+  detailPanel.id = "detail-panel";
+  document.body.appendChild(detailPanel);
+  let detailOpen = false;
+  let detailAreaKey: string | null = null;
+
   // --- Resolve the counts key and display label for a feature ---
   function resolveFeature(
     f: AreaFeature,
@@ -531,11 +539,144 @@ async function main(): Promise<void> {
         style: tooltipStyle,
       };
     },
+    onClick: ({ object }: { object?: AreaFeature | CircleDataPoint }) => {
+      if (!object) {
+        if (detailOpen) closeDetail();
+        return;
+      }
+
+      let countsKey: string;
+      let label: string;
+      let centroid: [number, number];
+
+      if ("position" in object && "countsKey" in object) {
+        const d = object as CircleDataPoint;
+        countsKey = d.countsKey;
+        label = d.label;
+        centroid = d.position;
+      } else {
+        const resolved = resolveFeature(object as AreaFeature, currentUnit);
+        if (!resolved) return;
+        countsKey = resolved.countsKey;
+        label = resolved.label;
+        const feat = object as AreaFeature;
+        centroid = computeCentroid(feat.geometry as Polygon | MultiPolygon);
+      }
+
+      openDetail(countsKey, label, centroid);
+    },
     style: { background: "transparent" },
   });
 
   // Build initial sparkline
   buildSparkline();
+
+  function openDetail(countsKey: string, label: string, centroid: [number, number]): void {
+    detailAreaKey = countsKey;
+    detailOpen = true;
+
+    // Fly to the area
+    deck.setProps({
+      initialViewState: {
+        longitude: centroid[0],
+        latitude: centroid[1],
+        zoom: 13,
+        pitch: 45,
+        bearing: 0,
+        transitionDuration: 1200,
+      },
+    });
+
+    // Build panel content
+    const countsMap = computeFilteredCounts(currentUnit, activeCategories);
+    const areaCounts = countsMap[countsKey] ?? {};
+    const currentCount = areaCounts[currentMonth] ?? 0;
+
+    // Rank among all areas this month
+    const allCounts: Array<{ key: string; count: number }> = [];
+    for (const [key, mc] of Object.entries(countsMap)) {
+      allCounts.push({ key, count: mc[currentMonth] ?? 0 });
+    }
+    allCounts.sort((a, b) => b.count - a.count);
+    const rank = allCounts.findIndex((a) => a.key === countsKey) + 1;
+    const totalAreas = allCounts.length;
+
+    // Top 3 months for this area
+    const monthEntries = Object.entries(areaCounts)
+      .map(([m, c]) => ({ month: m, count: c }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    // Month-over-month trend
+    const monthIdx = months.indexOf(currentMonth);
+    const prevCount = monthIdx > 0 ? (areaCounts[months[monthIdx - 1]] ?? 0) : 0;
+    const trend = currentCount > prevCount ? "\u2191" : currentCount < prevCount ? "\u2193" : "\u2192";
+
+    // Sparkline for this area across all months
+    const areaTotals = months.map((m) => areaCounts[m] ?? 0);
+    const areaMax = Math.max(...areaTotals, 1);
+    const sparkW = 260;
+    const sparkH = 50;
+    const sparkPad = 2;
+    const stepX = (sparkW - sparkPad * 2) / Math.max(months.length - 1, 1);
+    const pts = areaTotals.map((t, i) => ({
+      x: sparkPad + i * stepX,
+      y: sparkH - sparkPad - (t / areaMax) * (sparkH - sparkPad * 2),
+    }));
+    const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+    const areaPath = `${linePath} L${pts[pts.length - 1].x},${sparkH - sparkPad} L${pts[0].x},${sparkH - sparkPad} Z`;
+    const ci = months.indexOf(currentMonth);
+    const cx = ci >= 0 ? pts[ci].x : 0;
+    const cy = ci >= 0 ? pts[ci].y : 0;
+
+    detailPanel.innerHTML = `
+      <button id="detail-close">\u2715</button>
+      <h2>${label}</h2>
+      <div class="detail-stat">
+        <span class="detail-big">${currentCount}</span>
+        <span class="detail-label">shoots in ${formatMonth(currentMonth)} ${trend}</span>
+      </div>
+      <div class="detail-stat">
+        <span class="detail-rank">#${rank}</span>
+        <span class="detail-label">of ${totalAreas} areas</span>
+      </div>
+      <div class="detail-section">
+        <h3>Activity over time</h3>
+        <svg width="${sparkW}" height="${sparkH}" viewBox="0 0 ${sparkW} ${sparkH}">
+          <path d="${areaPath}" fill="#ffc83c" opacity="0.15"/>
+          <path d="${linePath}" fill="none" stroke="#ffc83c" stroke-width="1.5"/>
+          <circle cx="${cx}" cy="${cy}" r="3.5" fill="#ffc83c"/>
+        </svg>
+      </div>
+      <div class="detail-section">
+        <h3>Top months</h3>
+        <ul class="detail-top-months">
+          ${monthEntries.map((e) => `<li><strong>${formatMonth(e.month)}</strong> \u2014 ${e.count} shoots</li>`).join("")}
+        </ul>
+      </div>
+    `;
+
+    detailPanel.classList.add("open");
+
+    // Close button handler
+    detailPanel.querySelector("#detail-close")!.addEventListener("click", closeDetail);
+  }
+
+  function closeDetail(): void {
+    if (!detailOpen) return;
+    detailOpen = false;
+    detailAreaKey = null;
+    detailPanel.classList.remove("open");
+
+    // Fly back to overview
+    deck.setProps({
+      initialViewState: {
+        ...INITIAL_VIEW_STATE,
+        transitionDuration: 1000,
+      },
+    });
+  }
+
 
   // --- Update layers ---
   function updateLayers(): void {
@@ -549,6 +690,22 @@ async function main(): Promise<void> {
       captionEl.style.opacity = text ? "1" : "0";
     }
     buildSparkline();
+    // Refresh detail panel if open
+    if (detailOpen && detailAreaKey) {
+      const countsMap = computeFilteredCounts(currentUnit, activeCategories);
+      const areaCounts = countsMap[detailAreaKey] ?? {};
+      const count = areaCounts[currentMonth] ?? 0;
+      const bigEl = detailPanel.querySelector(".detail-big");
+      const labelEl = detailPanel.querySelector(".detail-stat .detail-label");
+      if (bigEl) bigEl.textContent = String(count);
+      if (labelEl) {
+        const monthIdx = months.indexOf(currentMonth);
+        const prevCount = monthIdx > 0 ? (areaCounts[months[monthIdx - 1]] ?? 0) : 0;
+        const trend = count > prevCount ? "\u2191" : count < prevCount ? "\u2193" : "\u2192";
+        labelEl.textContent = `shoots in ${formatMonth(currentMonth)} ${trend}`;
+      }
+    }
+
     deck.setProps({ layers: [buildVisualizationLayer(currentMonth, currentUnit)] });
   }
 
@@ -610,6 +767,11 @@ async function main(): Promise<void> {
 
   // --- Keyboard shortcuts ---
   document.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      closeDetail();
+      return;
+    }
+
     if (e.key === " ") {
       e.preventDefault();
       if (playing) {
