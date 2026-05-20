@@ -108,6 +108,13 @@ function computeMaxCount(
   return max;
 }
 
+/** Format "YYYY-MM" → "Feb 2026" style label. */
+function formatMonth(yyyymm: string): string {
+  const [year, month] = yyyymm.split("-").map(Number);
+  const date = new Date(year, month - 1);
+  return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
@@ -165,10 +172,44 @@ async function main(): Promise<void> {
 
   const monthLabel = document.createElement("span");
   monthLabel.id = "month-label";
-  monthLabel.textContent = currentMonth;
+  monthLabel.textContent = formatMonth(currentMonth);
 
   controls.append(unitToggle, playBtn, slider, monthLabel);
   document.body.appendChild(controls);
+
+  // --- Title overlay ---
+  const titleOverlay = document.createElement("div");
+  titleOverlay.id = "title-overlay";
+  titleOverlay.innerHTML =
+    `<h1>On Location</h1><p>NYC film &amp; TV permit activity, month by month</p>`;
+  document.body.appendChild(titleOverlay);
+
+  // --- Color legend ---
+  const legend = document.createElement("div");
+  legend.id = "legend";
+  const legendGradient = document.createElement("div");
+  legendGradient.id = "legend-gradient";
+  const legendLabels = document.createElement("div");
+  legendLabels.id = "legend-labels";
+  const legendMin = document.createElement("span");
+  legendMin.textContent = "0";
+  const legendMax = document.createElement("span");
+  legendMax.id = "legend-max";
+  const initialMax = computeMaxCount(countsForUnit(currentUnit), currentMonth);
+  legendMax.textContent = String(initialMax);
+  legendLabels.append(legendMin, legendMax);
+  const legendTitle = document.createElement("div");
+  legendTitle.id = "legend-title";
+  legendTitle.textContent = "Shoots";
+  legend.append(legendTitle, legendGradient, legendLabels);
+  document.body.appendChild(legend);
+
+  // --- Attribution ---
+  const attribution = document.createElement("div");
+  attribution.id = "attribution";
+  attribution.innerHTML =
+    `Data: <a href="https://data.cityofnewyork.us/City-Government/Film-Permits/tg4x-b46p" target="_blank" rel="noopener">NYC Open Data Film Permits</a>`;
+  document.body.appendChild(attribution);
 
   // --- Resolve the counts key and display label for a feature ---
   function resolveFeature(
@@ -251,7 +292,7 @@ async function main(): Promise<void> {
       const count = countsMap[resolved.countsKey]?.[currentMonth] ?? 0;
 
       return {
-        html: `<strong>${resolved.label}</strong><br/>Shoots in ${currentMonth}: ${count}`,
+        html: `<strong>${resolved.label}</strong><br/>Shoots in ${formatMonth(currentMonth)}: ${count}`,
         style: tooltipStyle,
       };
     },
@@ -260,7 +301,9 @@ async function main(): Promise<void> {
 
   // --- Update layers ---
   function updateLayers(): void {
-    monthLabel.textContent = currentMonth;
+    monthLabel.textContent = formatMonth(currentMonth);
+    const maxCount = computeMaxCount(countsForUnit(currentUnit), currentMonth);
+    legendMax.textContent = String(maxCount);
     deck.setProps({ layers: [buildLayer(currentMonth, currentUnit)] });
   }
 
@@ -310,6 +353,30 @@ async function main(): Promise<void> {
       stopPlayback();
     } else {
       startPlayback();
+    }
+  });
+
+  // --- Keyboard shortcuts ---
+  document.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key === " ") {
+      e.preventDefault();
+      if (playing) {
+        stopPlayback();
+      } else {
+        startPlayback();
+      }
+    } else if (e.key === "ArrowLeft") {
+      if (playing) stopPlayback();
+      const idx = Math.max(0, slider.valueAsNumber - 1);
+      slider.value = String(idx);
+      currentMonth = months[idx];
+      updateLayers();
+    } else if (e.key === "ArrowRight") {
+      if (playing) stopPlayback();
+      const idx = Math.min(months.length - 1, slider.valueAsNumber + 1);
+      slider.value = String(idx);
+      currentMonth = months[idx];
+      updateLayers();
     }
   });
 }
