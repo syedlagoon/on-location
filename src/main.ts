@@ -1,7 +1,7 @@
 import "./style.css";
 import { Deck } from "@deck.gl/core";
-import { GeoJsonLayer } from "@deck.gl/layers";
-import type { Feature, FeatureCollection, Geometry } from "geojson";
+import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import type { Feature, FeatureCollection, Geometry, Position, Polygon, MultiPolygon } from "geojson";
 
 // --- Types ---
 
@@ -38,6 +38,14 @@ type ZipFeature = Feature<Geometry, ZipProperties>;
 type AreaFeature = CdFeature | ZipFeature;
 
 type UnitMode = "cd" | "zip";
+type VizMode = "bars" | "circles";
+
+interface CircleDataPoint {
+  position: [number, number];
+  count: number;
+  label: string;
+  countsKey: string;
+}
 
 interface CaptionsData {
   metadata: { generatedAt: string; model: string };
@@ -145,6 +153,25 @@ function getColor(
   ];
 }
 
+/** Compute centroid as arithmetic mean of outer ring vertices. */
+function computeCentroid(geometry: Polygon | MultiPolygon): [number, number] {
+  const coords: Position[] = [];
+  if (geometry.type === "Polygon") {
+    coords.push(...geometry.coordinates[0]);
+  } else {
+    for (const polygon of geometry.coordinates) {
+      coords.push(...polygon[0]);
+    }
+  }
+  let lng = 0;
+  let lat = 0;
+  for (const [x, y] of coords) {
+    lng += x;
+    lat += y;
+  }
+  return [lng / coords.length, lat / coords.length];
+}
+
 // --- Main ---
 
 async function main(): Promise<void> {
@@ -166,6 +193,7 @@ async function main(): Promise<void> {
   let currentMonth = max;
   let currentUnit: UnitMode = "cd";
   let activeCategories: Set<string> | null = null;
+  let currentVizMode: VizMode = "bars";
 
   // --- Build controls UI ---
   const controls = document.createElement("div");
@@ -190,7 +218,12 @@ async function main(): Promise<void> {
   monthLabel.id = "month-label";
   monthLabel.textContent = formatMonth(currentMonth);
 
-  controls.append(unitToggle, playBtn, slider, monthLabel);
+  const vizToggle = document.createElement("button");
+  vizToggle.id = "viz-toggle";
+  vizToggle.textContent = "|||";
+  vizToggle.title = "Toggle bars / circles";
+
+  controls.append(unitToggle, vizToggle, playBtn, slider, monthLabel);
   document.body.appendChild(controls);
 
   // --- Title overlay ---
@@ -352,6 +385,53 @@ async function main(): Promise<void> {
     });
   }
 
+  // --- Circle layer builder ---
+  function buildCircleLayer(month: string, unit: UnitMode): ScatterplotLayer {
+    const countsMap = computeFilteredCounts(unit, activeCategories);
+    const maxCount = computeMaxCount(countsMap, month);
+    const features = unit === "cd" ? cdBoundaries.features : zipBoundaries.features;
+
+    const data: CircleDataPoint[] = [];
+    for (const f of features) {
+      const resolved = resolveFeature(f as AreaFeature, unit);
+      if (!resolved) continue;
+      const count = countsMap[resolved.countsKey]?.[month] ?? 0;
+      const centroid = computeCentroid(f.geometry as Polygon | MultiPolygon);
+      data.push({ position: centroid, count, label: resolved.label, countsKey: resolved.countsKey });
+    }
+
+    const MAX_RADIUS = 2000;
+    const MIN_RADIUS = 200;
+
+    return new ScatterplotLayer({
+      id: "circle-layer",
+      data,
+      pickable: true,
+      opacity: 0.8,
+      stroked: true,
+      filled: true,
+      getPosition: (d: CircleDataPoint) => d.position,
+      getRadius: (d: CircleDataPoint) => {
+        if (maxCount === 0 || d.count === 0) return MIN_RADIUS;
+        return MIN_RADIUS + Math.sqrt(d.count / maxCount) * (MAX_RADIUS - MIN_RADIUS);
+      },
+      getFillColor: (d: CircleDataPoint) => getColor(d.count, maxCount),
+      getLineColor: [255, 255, 255, 80],
+      lineWidthMinPixels: 1,
+      radiusUnits: "meters" as const,
+      transitions: {
+        getRadius: { duration: 600, easing: (t: number) => t * (2 - t) },
+        getFillColor: { duration: 600 },
+      },
+    });
+  }
+
+  function buildVisualizationLayer(month: string, unit: UnitMode): GeoJsonLayer | ScatterplotLayer {
+    return currentVizMode === "bars"
+      ? buildLayer(month, unit)
+      : buildCircleLayer(month, unit);
+  }
+
   const tooltipStyle = {
     fontFamily: "system-ui, sans-serif",
     fontSize: "13px",
@@ -368,17 +448,29 @@ async function main(): Promise<void> {
     parent: document.querySelector<HTMLDivElement>("#app")!,
     initialViewState: INITIAL_VIEW_STATE,
     controller: true,
-    layers: [buildLayer(currentMonth, currentUnit)],
-    getTooltip: ({ object }: { object?: AreaFeature }) => {
+    layers: [buildVisualizationLayer(currentMonth, currentUnit)],
+    getTooltip: ({ object }: { object?: AreaFeature | CircleDataPoint }) => {
       if (!object) return null;
-      const resolved = resolveFeature(object, currentUnit);
-      if (!resolved) return null;
 
-      const countsMap = computeFilteredCounts(currentUnit, activeCategories);
-      const count = countsMap[resolved.countsKey]?.[currentMonth] ?? 0;
+      let label: string;
+      let count: number;
+
+      if ("position" in object && "countsKey" in object) {
+        // Circle mode data point
+        const d = object as CircleDataPoint;
+        label = d.label;
+        count = d.count;
+      } else {
+        // Bar mode GeoJSON feature
+        const resolved = resolveFeature(object as AreaFeature, currentUnit);
+        if (!resolved) return null;
+        const countsMap = computeFilteredCounts(currentUnit, activeCategories);
+        count = countsMap[resolved.countsKey]?.[currentMonth] ?? 0;
+        label = resolved.label;
+      }
 
       return {
-        html: `<strong>${resolved.label}</strong><br/>Shoots in ${formatMonth(currentMonth)}: ${count}`,
+        html: `<strong>${label}</strong><br/>Shoots in ${formatMonth(currentMonth)}: ${count}`,
         style: tooltipStyle,
       };
     },
@@ -396,7 +488,7 @@ async function main(): Promise<void> {
       captionEl.textContent = text;
       captionEl.style.opacity = text ? "1" : "0";
     }
-    deck.setProps({ layers: [buildLayer(currentMonth, currentUnit)] });
+    deck.setProps({ layers: [buildVisualizationLayer(currentMonth, currentUnit)] });
   }
 
   // --- Slider input ---
@@ -410,6 +502,13 @@ async function main(): Promise<void> {
   unitToggle.addEventListener("click", () => {
     currentUnit = currentUnit === "cd" ? "zip" : "cd";
     unitToggle.textContent = currentUnit === "cd" ? "CD" : "ZIP";
+    updateLayers();
+  });
+
+  // --- Viz toggle ---
+  vizToggle.addEventListener("click", () => {
+    currentVizMode = currentVizMode === "bars" ? "circles" : "bars";
+    vizToggle.textContent = currentVizMode === "bars" ? "|||" : "\u25CF";
     updateLayers();
   });
 

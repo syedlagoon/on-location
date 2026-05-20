@@ -46,7 +46,8 @@ body {
 }
 
 #play-btn,
-#unit-toggle {
+#unit-toggle,
+#viz-toggle {
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: #fafafa;
@@ -66,13 +67,15 @@ body {
   font-size: 16px;
 }
 
-#unit-toggle {
+#unit-toggle,
+#viz-toggle {
   padding: 0 14px;
   min-width: 52px;
 }
 
 #play-btn:hover,
-#unit-toggle:hover {
+#unit-toggle:hover,
+#viz-toggle:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
