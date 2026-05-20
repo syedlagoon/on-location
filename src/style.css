@@ -167,6 +167,22 @@ body {
   text-underline-offset: 2px;
 }
 
+/* --- Caption --- */
+
+#caption {
+  position: fixed;
+  top: 80px;
+  left: 24px;
+  font-size: 15px;
+  font-style: italic;
+  opacity: 0.65;
+  color: #fafafa;
+  pointer-events: none;
+  z-index: 1;
+  max-width: 400px;
+  transition: opacity 0.3s ease;
+}
+
 /* --- Category filter --- */
 
 #category-filter {
@@ -252,5 +268,12 @@ body {
   .cat-pill {
     font-size: 11px;
     padding: 3px 8px;
+  }
+
+  #caption {
+    top: 56px;
+    left: 16px;
+    font-size: 13px;
+    max-width: 70vw;
   }
 }

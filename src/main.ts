@@ -39,6 +39,13 @@ type AreaFeature = CdFeature | ZipFeature;
 
 type UnitMode = "cd" | "zip";
 
+interface CaptionsData {
+  metadata: { generatedAt: string; model: string };
+  cd: Record<string, string>;
+  zip: Record<string, string>;
+}
+
+
 // --- Constants ---
 
 const BOROUGH_NAMES: Record<number, string> = {
@@ -141,7 +148,7 @@ function getColor(
 // --- Main ---
 
 async function main(): Promise<void> {
-  const [counts, cdBoundaries, zipBoundaries] = await Promise.all([
+  const [counts, cdBoundaries, zipBoundaries, captions] = await Promise.all([
     fetch("/data/counts.json").then((r) => r.json() as Promise<CountsData>),
     fetch("/data/cd-boundaries.geojson").then(
       (r) => r.json() as Promise<FeatureCollection<Geometry, CdProperties>>,
@@ -149,6 +156,9 @@ async function main(): Promise<void> {
     fetch("/data/zip-boundaries.geojson").then(
       (r) => r.json() as Promise<FeatureCollection<Geometry, ZipProperties>>,
     ),
+    fetch("/data/captions.json")
+      .then((r) => r.ok ? r.json() as Promise<CaptionsData> : null)
+      .catch(() => null),
   ]);
 
   const { min, max } = counts.metadata.dateRange;
@@ -189,6 +199,11 @@ async function main(): Promise<void> {
   titleOverlay.innerHTML =
     `<h1>On Location</h1><p>NYC film &amp; TV permit activity, month by month</p>`;
   document.body.appendChild(titleOverlay);
+
+  // --- Caption ---
+  const captionEl = document.createElement("div");
+  captionEl.id = "caption";
+  document.body.appendChild(captionEl);
 
   // --- Color legend ---
   const legend = document.createElement("div");
@@ -375,6 +390,12 @@ async function main(): Promise<void> {
     monthLabel.textContent = formatMonth(currentMonth);
     const maxCount = computeMaxCount(computeFilteredCounts(currentUnit, activeCategories), currentMonth);
     legendMax.textContent = String(maxCount);
+    if (captions) {
+      const captionMap = currentUnit === "cd" ? captions.cd : captions.zip;
+      const text = activeCategories === null ? (captionMap[currentMonth] ?? "") : "";
+      captionEl.textContent = text;
+      captionEl.style.opacity = text ? "1" : "0";
+    }
     deck.setProps({ layers: [buildLayer(currentMonth, currentUnit)] });
   }
 
