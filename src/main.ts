@@ -269,8 +269,12 @@ async function main(): Promise<void> {
 
     row.append(info, toggle);
 
-    // Clicking anywhere on the row triggers the toggle
-    row.addEventListener("click", () => toggle.click());
+    // Clicking anywhere on the row triggers the toggle, but avoid
+    // double-firing when the toggle button itself is clicked (the
+    // click would bubble up to the row and call toggle.click() again).
+    row.addEventListener("click", (ev) => {
+      if (ev.target !== toggle) toggle.click();
+    });
 
     return { row, toggle };
   }
@@ -355,7 +359,7 @@ async function main(): Promise<void> {
       notch.addEventListener("click", () => {
         currentMonthIdx = idx;
         currentMonth = months[idx];
-        updateActiveNotch();
+        // updateLayers() calls updateActiveNotch() internally
         updateLayers();
       });
 
@@ -466,11 +470,11 @@ async function main(): Promise<void> {
         }
         // Update pill active states
         filterBar.querySelectorAll(".cat-pill").forEach((el) => {
-          const text = el.textContent;
-          if (text === "All") {
+          const pillText = el.textContent ?? "";
+          if (pillText === "All") {
             el.classList.toggle("cat-active", activeCategories === null);
           } else {
-            el.classList.toggle("cat-active", activeCategories !== null && activeCategories.has(text!));
+            el.classList.toggle("cat-active", activeCategories !== null && activeCategories.has(pillText));
           }
         });
         buildNotches();
@@ -488,6 +492,7 @@ async function main(): Promise<void> {
   document.body.appendChild(detailPanel);
   let detailOpen = false;
   let detailAreaKey: string | null = null;
+  let detailAreaLabel: string | null = null;
 
   // --- Resolve the counts key and display label for a feature ---
   function resolveFeature(
@@ -577,11 +582,18 @@ async function main(): Promise<void> {
     });
   }
 
+  /** Serialize activeCategories into a stable string for updateTriggers. */
+  function categoryTrigger(): string {
+    if (activeCategories === null) return "all";
+    return [...activeCategories].sort().join(",");
+  }
+
   // --- Layer builder ---
   function buildLayer(month: string, unit: UnitMode): GeoJsonLayer {
     const countsMap = computeFilteredCounts(unit, activeCategories);
     const maxCount = computeMaxCount(countsMap, month);
     const data = unit === "cd" ? cdBoundaries : zipBoundaries;
+    const catTrigger = categoryTrigger();
 
     return new GeoJsonLayer({
       id: "area-layer",
@@ -604,8 +616,8 @@ async function main(): Promise<void> {
       getLineColor: [80, 80, 100, 200],
       material: { ambient: 0.6, diffuse: 0.6, shininess: 20 },
       updateTriggers: {
-        getElevation: [month, unit],
-        getFillColor: [month, unit],
+        getElevation: [month, unit, catTrigger],
+        getFillColor: [month, unit, catTrigger],
       },
       transitions: {
         getElevation: { duration: 700, easing: (t: number) => 1 - Math.pow(1 - t, 3) },
@@ -649,8 +661,8 @@ async function main(): Promise<void> {
       lineWidthMinPixels: 1,
       radiusUnits: "meters" as const,
       updateTriggers: {
-        getRadius: [month, unit],
-        getFillColor: [month, unit],
+        getRadius: [month, unit, categoryTrigger()],
+        getFillColor: [month, unit, categoryTrigger()],
       },
       transitions: {
         getRadius: { duration: 800, easing: (t: number) => t < 1 ? 1 - Math.pow(1 - t, 4) : 1 },
@@ -730,6 +742,8 @@ async function main(): Promise<void> {
     unitRow.style.display = visible ? "" : "none";
     vizRow.style.display = visible ? "" : "none";
     legend.style.display = visible ? "block" : "none";
+    // filterBar may not be in the DOM if no categories exist, but setting
+    // display on a detached element is harmless.
     filterBar.style.display = visible ? "flex" : "none";
   }
 
@@ -851,7 +865,10 @@ async function main(): Promise<void> {
     setTimeout(() => hero.remove(), 1200);
   }
 
-  if (!heroSeen) {
+  if (heroSeen) {
+    // Hero was already shown in a previous session — reveal UI immediately
+    revealUI();
+  } else {
     // If user already skipped (before deck was ready), trigger pull-back now
     if (heroDismissed) {
       deck.setProps({
@@ -860,6 +877,7 @@ async function main(): Promise<void> {
           transitionDuration: 2000,
         },
       });
+      revealUI();
     } else {
       // Allow skip handler to trigger the pull-back
       onHeroSkip = dismissHero;
@@ -869,7 +887,12 @@ async function main(): Promise<void> {
   }
 
   function openDetail(countsKey: string, label: string, _centroid: [number, number]): void {
+    // Track whether this is a refresh (panel already open) vs first open.
+    // When refreshing, suppress the entrance animation to avoid flickering.
+    const isRefresh = detailOpen && detailPanel.classList.contains("open");
+
     detailAreaKey = countsKey;
+    detailAreaLabel = label;
     detailOpen = true;
 
     // Build panel content
@@ -950,6 +973,13 @@ async function main(): Promise<void> {
       </div>
     `;
 
+    if (isRefresh) {
+      // Suppress child entrance animation during month-change refresh
+      detailPanel.classList.add("no-animate");
+    } else {
+      detailPanel.classList.remove("no-animate");
+    }
+
     detailPanel.classList.add("open");
 
     // Close button handler
@@ -960,7 +990,8 @@ async function main(): Promise<void> {
     if (!detailOpen) return;
     detailOpen = false;
     detailAreaKey = null;
-    detailPanel.classList.remove("open");
+    detailAreaLabel = null;
+    detailPanel.classList.remove("open", "no-animate");
   }
 
 
@@ -986,21 +1017,10 @@ async function main(): Promise<void> {
       captionEl.textContent = text;
       captionEl.style.opacity = text ? "1" : "0";
     }
-    // Refresh detail panel if open
-    if (detailOpen && detailAreaKey) {
-      const countsMap = computeFilteredCounts(currentUnit, activeCategories);
-      const areaCounts = countsMap[detailAreaKey] ?? {};
-      const count = areaCounts[currentMonth] ?? 0;
-      const bigEl = detailPanel.querySelector(".detail-big");
-      const labelEl = detailPanel.querySelector(".detail-stat .detail-label");
-      if (bigEl) bigEl.textContent = String(count);
-      if (labelEl) {
-        const mi = months.indexOf(currentMonth);
-        const pc = mi > 0 ? (areaCounts[months[mi - 1]] ?? 0) : 0;
-        const tChar = count > pc ? "\u2191" : count < pc ? "\u2193" : "\u2192";
-        const tCls = count > pc ? "trend-up" : count < pc ? "trend-down" : "trend-flat";
-        labelEl.innerHTML = `shoots in ${formatMonth(currentMonth)} <span class="${tCls}">${tChar}</span>`;
-      }
+    // Refresh detail panel if open — full re-render so sparkline, rank,
+    // and top months all stay in sync with the current month.
+    if (detailOpen && detailAreaKey && detailAreaLabel) {
+      openDetail(detailAreaKey, detailAreaLabel, [0, 0]);
     }
 
     deck.setProps({ layers: buildVisualizationLayers(currentMonth, currentUnit) });
@@ -1011,6 +1031,8 @@ async function main(): Promise<void> {
     e.stopPropagation();
     currentUnit = currentUnit === "cd" ? "zip" : "cd";
     unitToggle.textContent = currentUnit === "cd" ? "CD" : "ZIP";
+    // Close detail panel — area keys are unit-specific and won't match after switch
+    if (detailOpen) closeDetail();
     buildNotches();
     updateLayers();
   });
@@ -1087,14 +1109,13 @@ async function main(): Promise<void> {
       if (currentMonthIdx > 0) {
         currentMonthIdx--;
         currentMonth = months[currentMonthIdx];
-        updateActiveNotch();
+        // updateLayers() calls updateActiveNotch() internally
         updateLayers();
       }
     } else if (e.key === "ArrowRight") {
       if (currentMonthIdx < months.length - 1) {
         currentMonthIdx++;
         currentMonth = months[currentMonthIdx];
-        updateActiveNotch();
         updateLayers();
       }
     }
