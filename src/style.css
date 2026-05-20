@@ -1227,11 +1227,34 @@ body {
 }
 
 
+/* --- Responsive (ultra-wide, >=1600px) --- */
+
+@media (min-width: 1600px) {
+  #timeline {
+    max-width: 1000px;
+  }
+
+  #toolbar {
+    width: 220px;
+  }
+}
+
+
 /* --- Responsive (tablets, <=900px) --- */
 
 @media (max-width: 900px) {
   #toolbar {
     width: 180px;
+  }
+
+  #timeline {
+    width: 85%;
+  }
+
+  /* Legend: shift inward to avoid overlap with left-aligned title overlay */
+  #legend {
+    bottom: 110px;
+    left: var(--space-2xl);
   }
 
   /* Year labels: hide alternate years to prevent overlap on narrower timelines */
@@ -1276,6 +1299,25 @@ body {
     width: 170px;
     max-height: calc(100vh - 120px);
     overflow-y: auto;
+    /* Scrollbar styling consistent with detail panel */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 200, 60, 0.25) rgba(255, 255, 255, 0.03);
+  }
+
+  /* Webkit scrollbar for toolbar on mobile */
+  #toolbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  #toolbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 2px;
+  }
+  #toolbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 200, 60, 0.25);
+    border-radius: 2px;
+  }
+  #toolbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 200, 60, 0.4);
   }
 
   .toolbar-row {
@@ -1338,6 +1380,9 @@ body {
   .toolbar-expandable .cat-pill {
     font-size: 10px;
     padding: 3px 6px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
 
   #caption {
@@ -1389,10 +1434,52 @@ body {
   .toolbar-expandable .decade-pill {
     font-size: 9px;
     padding: 2px 5px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Touch target for toolbar toggle buttons */
+  .toolbar-toggle {
+    min-height: 44px;
+  }
+
+  /* Touch target for toolbar rows */
+  .toolbar-row {
+    min-height: 44px;
   }
 
   .detail-film-poster {
     width: 48px;
     height: 72px;
+  }
+}
+
+
+/* --- Responsive (landscape phones / short viewports) --- */
+
+@media (max-height: 400px) {
+  #toolbar {
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+
+  .toolbar-row {
+    padding: var(--space-xs) var(--space-md);
+  }
+
+  .toolbar-expandable-inner {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  /* Relax touch targets on very short viewports to save space */
+  .toolbar-row {
+    min-height: 36px;
+  }
+
+  .toolbar-expandable .cat-pill,
+  .toolbar-expandable .decade-pill {
+    min-height: 36px;
   }
 }
