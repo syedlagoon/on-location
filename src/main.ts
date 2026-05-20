@@ -229,29 +229,65 @@ async function main(): Promise<void> {
   // Track current month index for easier navigation
   let currentMonthIdx = months.indexOf(currentMonth);
 
-  // --- Build toggle buttons ---
-  const unitToggle = document.createElement("button");
-  unitToggle.id = "unit-toggle";
-  unitToggle.textContent = "CD";
-  unitToggle.setAttribute("aria-label", "Toggle between community district and zip code view");
-  unitToggle.title = "Community District / Zip Code";
-
-  const vizToggle = document.createElement("button");
-  vizToggle.id = "viz-toggle";
-  vizToggle.textContent = "|||";
-  vizToggle.setAttribute("aria-label", "Toggle between bars and circles visualization");
-  vizToggle.title = "Bars / Circles";
-
-  const grainToggle = document.createElement("button");
-  grainToggle.id = "grain-toggle";
-  grainToggle.textContent = "Block";
-  grainToggle.setAttribute("aria-label", "Toggle block-level heatmap");
-  grainToggle.title = "Block-level heatmap";
-
-  // --- Build toolbar (toggle buttons only) ---
+  // --- Build toolbar card with descriptive toggle rows ---
   const toolbar = document.createElement("div");
   toolbar.id = "toolbar";
-  toolbar.append(unitToggle, vizToggle, grainToggle);
+
+  // Helper: create a toolbar row with heading, description, and toggle button
+  function createToolbarRow(
+    heading: string,
+    desc: string,
+    initialLabel: string,
+    ariaLabel: string,
+  ): { row: HTMLDivElement; toggle: HTMLButtonElement } {
+    const row = document.createElement("div");
+    row.className = "toolbar-row";
+
+    const info = document.createElement("div");
+    info.className = "toolbar-info";
+    const h = document.createElement("span");
+    h.className = "toolbar-heading";
+    h.textContent = heading;
+    const d = document.createElement("span");
+    d.className = "toolbar-desc";
+    d.textContent = desc;
+    info.append(h, d);
+
+    const toggle = document.createElement("button");
+    toggle.className = "toolbar-toggle";
+    toggle.textContent = initialLabel;
+    toggle.setAttribute("aria-label", ariaLabel);
+
+    row.append(info, toggle);
+
+    // Clicking anywhere on the row triggers the toggle
+    row.addEventListener("click", () => toggle.click());
+
+    return { row, toggle };
+  }
+
+  const { row: unitRow, toggle: unitToggle } = createToolbarRow(
+    "Area",
+    "Community districts or zip codes",
+    "CD",
+    "Toggle area type",
+  );
+
+  const { row: vizRow, toggle: vizToggle } = createToolbarRow(
+    "Shape",
+    "3D bars or proportional circles",
+    "Bars",
+    "Toggle visualization shape",
+  );
+
+  const { row: grainRow, toggle: grainToggle } = createToolbarRow(
+    "Detail",
+    "Area polygons or block heatmap",
+    "Area",
+    "Toggle block-level heatmap",
+  );
+
+  toolbar.append(unitRow, vizRow, grainRow);
   document.body.appendChild(toolbar);
 
   // --- Build notch timeline ---
@@ -632,9 +668,8 @@ async function main(): Promise<void> {
 
   /** Show/hide area-mode controls based on grain mode. */
   function setAreaControlsVisible(visible: boolean): void {
-    const display = visible ? "" : "none";
-    unitToggle.style.display = display;
-    vizToggle.style.display = display;
+    unitRow.style.display = visible ? "" : "none";
+    vizRow.style.display = visible ? "" : "none";
     legend.style.display = visible ? "block" : "none";
     filterBar.style.display = visible ? "flex" : "none";
   }
@@ -901,7 +936,8 @@ async function main(): Promise<void> {
   }
 
   // --- Unit toggle ---
-  unitToggle.addEventListener("click", () => {
+  unitToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
     currentUnit = currentUnit === "cd" ? "zip" : "cd";
     unitToggle.textContent = currentUnit === "cd" ? "CD" : "ZIP";
     buildNotches();
@@ -909,21 +945,24 @@ async function main(): Promise<void> {
   });
 
   // --- Viz toggle ---
-  vizToggle.addEventListener("click", () => {
+  vizToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
     currentVizMode = currentVizMode === "bars" ? "circles" : "bars";
-    vizToggle.textContent = currentVizMode === "bars" ? "|||" : "\u25CF";
+    vizToggle.textContent = currentVizMode === "bars" ? "Bars" : "Circles";
     updateLayers();
   });
 
   // --- Grain toggle (area <-> block heatmap) ---
-  grainToggle.addEventListener("click", async () => {
+  grainToggle.addEventListener("click", async (e) => {
+    e.stopPropagation();
     if (currentGrain === "area") {
       // Switch to block mode — lazy-load blocks.json
       const loaded = await ensureBlocksData();
       if (!loaded) return;
 
       currentGrain = "block";
-      grainToggle.classList.add("grain-active");
+      grainToggle.textContent = "Block";
+      grainToggle.classList.add("toggle-active");
 
       // Hide area-mode-only controls
       setAreaControlsVisible(false);
@@ -935,7 +974,8 @@ async function main(): Promise<void> {
     } else {
       // Switch back to area mode
       currentGrain = "area";
-      grainToggle.classList.remove("grain-active");
+      grainToggle.textContent = "Area";
+      grainToggle.classList.remove("toggle-active");
 
       // Restore area-mode controls
       setAreaControlsVisible(true);
