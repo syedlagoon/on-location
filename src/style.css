@@ -156,6 +156,8 @@ body {
   max-width: 240px;
   line-height: 1.5;
   backdrop-filter: blur(var(--blur-tooltip));
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 /* Monospace count values inside tooltips */
@@ -253,6 +255,8 @@ body {
   padding: 0 var(--space-md);
   min-width: 46px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: all var(--transition-fast);
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
@@ -290,7 +294,7 @@ body {
 }
 
 .toolbar-expandable.expanded {
-  max-height: 300px;
+  max-height: 400px;
 }
 
 /* When the expandable is the last visible child, hide its border */
@@ -776,6 +780,8 @@ body {
   padding-right: var(--space-3xl);
   letter-spacing: -0.02em;
   line-height: 1.2;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .detail-formal-label {
