@@ -269,6 +269,67 @@ body {
   color: var(--color-accent);
 }
 
+/* Expandable accordion sections inside toolbar */
+.toolbar-expandable {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--transition-slow);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.toolbar-expandable.expanded {
+  max-height: 300px;
+}
+
+/* When the expandable is the last visible child, hide its border */
+.toolbar-expandable:last-child {
+  border-bottom: none;
+}
+
+.toolbar-expandable-inner {
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+/* Decade pills: uniform grid so items align in neat columns/rows */
+.toolbar-expandable-inner.decades-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xs);
+}
+
+/* Category pills inside toolbar: smaller, compact */
+.toolbar-expandable .cat-pill {
+  font-size: var(--text-label);
+  padding: 4px var(--space-sm);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Decade pills inside toolbar: grid-friendly sizing */
+.toolbar-expandable .decade-pill {
+  font-size: 10px;
+  padding: 4px 6px;
+  text-align: center;
+  width: 100%;
+}
+
+/* Chevron indicator on expandable rows */
+.toolbar-toggle-chevron::after {
+  content: '\25BE';
+  margin-left: 4px;
+  font-size: 10px;
+  display: inline-block;
+  transition: transform var(--transition-fast);
+}
+
+.toolbar-toggle-chevron.chevron-up::after {
+  transform: rotate(180deg);
+}
+
 
 /* --- Notch timeline --- */
 
@@ -316,20 +377,19 @@ body {
 .notch {
   flex: 1;
   min-width: 3px;
-  min-height: 4px;
+  height: 100%;
   background: rgba(255, 255, 255, 0.12);
   border-radius: 2px 2px 0 0;
   cursor: pointer;
+  transform-origin: bottom center;
   transition: background var(--transition-fast),
-              height 350ms cubic-bezier(0.16, 1, 0.3, 1),
-              transform var(--transition-fast),
+              transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow var(--transition-fast);
   position: relative;
 }
 
 .notch:hover {
   background: rgba(255, 255, 255, 0.35);
-  transform: scaleX(1.4);
   z-index: 1;
 }
 
@@ -348,11 +408,9 @@ body {
 @keyframes notchPulse {
   0%, 100% {
     box-shadow: 0 0 10px rgba(255, 200, 60, 0.45), 0 0 2px rgba(255, 200, 60, 0.8);
-    transform: scaleX(1);
   }
   50% {
     box-shadow: 0 0 16px rgba(255, 200, 60, 0.6), 0 0 4px rgba(255, 200, 60, 0.9);
-    transform: scaleX(1.15);
   }
 }
 
@@ -423,7 +481,7 @@ body {
 #legend {
   position: fixed;
   bottom: 100px;
-  right: var(--space-xl);
+  left: var(--space-xl);
   z-index: 3;
   pointer-events: none;
   background: var(--color-surface);
@@ -522,20 +580,7 @@ body {
 }
 
 
-/* --- Category filter --- */
-
-#category-filter {
-  position: fixed;
-  bottom: 160px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  z-index: 3;
-  max-width: 600px;
-}
+/* --- Category filter (now inside toolbar expandable) --- */
 
 .cat-pill {
   padding: 5px var(--space-md);
@@ -700,10 +745,23 @@ body {
 #detail-panel h2 {
   font-size: var(--text-heading);
   font-weight: 700;
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-sm);
   padding-right: var(--space-3xl);
   letter-spacing: -0.02em;
   line-height: 1.2;
+}
+
+.detail-formal-label {
+  display: block;
+  font-size: var(--text-caption);
+  color: var(--color-fg-muted);
+  margin-bottom: var(--space-xl);
+  letter-spacing: 0.01em;
+}
+
+/* Restore original h2 bottom margin when no formal label follows */
+#detail-panel h2 + .detail-stat {
+  margin-top: calc(var(--space-xl) - var(--space-sm));
 }
 
 .detail-stat {
@@ -871,9 +929,11 @@ body {
 
 .notch-tooltip {
   position: absolute;
-  bottom: calc(100% + 10px);
+  top: -28px;
   left: 50%;
   transform: translateX(-50%) translateY(4px);
+  /* Counter-scale the parent's scaleY so tooltip text isn't squished */
+  transform-origin: bottom center;
   background: var(--color-surface-solid);
   border: 1px solid var(--color-border-strong);
   border-radius: 6px;
@@ -892,9 +952,11 @@ body {
   color: var(--color-fg);
 }
 
+/* Counter-scale the parent notch's scaleY so tooltip text isn't squished.
+   --notch-scale-inv is set per-notch by JS (1/scaleY). */
 .notch:hover .notch-tooltip {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(-50%) translateY(0) scaleY(var(--notch-scale-inv, 1));
 }
 
 
@@ -953,6 +1015,199 @@ body {
 }
 
 
+/* --- Landmarks (decade pills inside toolbar expandable) --- */
+
+.decade-pill {
+  padding: 3px var(--space-sm);
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(240, 240, 240, 0.55);
+  font-size: var(--text-label);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  letter-spacing: 0.02em;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.decade-pill:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-fg);
+}
+
+.decade-pill:active {
+  transform: scale(0.95);
+  transition-duration: 60ms;
+}
+
+.decade-pill:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.decade-pill.decade-active {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent-border);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+
+/* --- Location detail panel: film entries --- */
+
+.detail-films-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.detail-film-entry {
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detail-film-entry:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.detail-film-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-xs);
+}
+
+.detail-film-title {
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--color-fg);
+  line-height: 1.3;
+}
+
+.detail-film-year {
+  font-size: var(--text-caption);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fg-muted);
+}
+
+.detail-film-badge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  line-height: 1.4;
+}
+
+.badge-film {
+  background: rgba(224, 102, 102, 0.15);
+  color: var(--color-cat-film);
+  border: 1px solid rgba(224, 102, 102, 0.3);
+}
+
+.badge-tv {
+  background: rgba(111, 168, 220, 0.15);
+  color: var(--color-cat-television);
+  border: 1px solid rgba(111, 168, 220, 0.3);
+}
+
+.detail-film-body {
+  display: flex;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.detail-film-poster {
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.detail-film-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.detail-film-meta {
+  font-size: var(--text-caption);
+  color: var(--color-fg-muted);
+  line-height: 1.4;
+}
+
+.detail-film-imdb {
+  font-size: var(--text-label);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color var(--transition-fast);
+}
+
+.detail-film-imdb:hover {
+  color: var(--color-accent-hover);
+}
+
+
+/* --- Notable films section in area detail panel --- */
+
+.notable-films-list {
+  list-style: none;
+  font-size: 13px;
+}
+
+.notable-film-item {
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+  line-height: 1.5;
+  color: var(--color-fg);
+}
+
+.notable-film-item:last-child {
+  border-bottom: none;
+}
+
+.notable-film-location {
+  font-size: var(--text-caption);
+  color: var(--color-fg-subtle);
+}
+
+.notable-film-more {
+  padding: var(--space-xs) 0;
+  font-size: var(--text-caption);
+  font-style: italic;
+  color: var(--color-fg-subtle);
+}
+
+
+/* --- Responsive (tablets, <=900px) --- */
+
+@media (max-width: 900px) {
+  #toolbar {
+    width: 180px;
+  }
+
+  /* Year labels: hide alternate years to prevent overlap on narrower timelines */
+  .year-label:nth-child(odd) {
+    display: none;
+  }
+}
+
+
 /* --- Responsive (<=600px) --- */
 
 @media (max-width: 600px) {
@@ -983,11 +1238,11 @@ body {
   }
 
   #toolbar {
-    top: auto;
-    /* Position above timeline (bottom ~54px) + category filter pills */
-    bottom: 108px;
+    top: var(--space-lg);
     right: var(--space-lg);
     width: 170px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
   }
 
   .toolbar-row {
@@ -996,15 +1251,15 @@ body {
 
   .toolbar-toggle {
     font-size: 10px;
-    height: 24px;
-    min-width: 38px;
+    height: 32px;
+    min-width: 44px;
   }
 
   #timeline {
     bottom: 10px;
     width: 92%;
-    padding: var(--space-sm) var(--space-md) var(--space-xs);
     max-width: calc(100vw - var(--space-xl));
+    padding: var(--space-sm) var(--space-md) var(--space-xs);
     overflow-x: auto;
   }
 
@@ -1020,10 +1275,15 @@ body {
     font-size: 9px;
   }
 
+  /* On small screens, show only every 4th year to prevent overlap */
+  .year-label:not(:nth-child(4n+1)) {
+    display: none;
+  }
+
   #legend {
-    top: var(--space-lg);
-    right: var(--space-lg);
-    bottom: auto;
+    top: auto;
+    left: var(--space-lg);
+    bottom: 80px;
     padding: var(--space-sm);
   }
 
@@ -1042,15 +1302,9 @@ body {
     font-size: 9px;
   }
 
-  #category-filter {
-    bottom: 136px;
-    gap: var(--space-xs);
-    max-width: calc(100vw - var(--space-2xl));
-  }
-
-  .cat-pill {
-    font-size: var(--text-label);
-    padding: 3px var(--space-sm);
+  .toolbar-expandable .cat-pill {
+    font-size: 10px;
+    padding: 3px 6px;
   }
 
   #caption {
@@ -1097,5 +1351,15 @@ body {
 
   .hero-accent {
     width: 32px;
+  }
+
+  .toolbar-expandable .decade-pill {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+
+  .detail-film-poster {
+    width: 48px;
+    height: 72px;
   }
 }

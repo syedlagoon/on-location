@@ -12,6 +12,8 @@
     "captions": "tsx scripts/captions.ts",
     "blocks": "tsx scripts/blocks.ts",
     "locations": "tsx scripts/locations.ts",
+    "curate-locations": "tsx scripts/curate-locations.ts",
+    "enrich-locations": "tsx scripts/enrich-locations.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -1,5 +1,6 @@
 import "./style.css";
 import { Deck } from "@deck.gl/core";
+import type { MapViewState } from "@deck.gl/core";
 import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 import type { Feature, FeatureCollection, Geometry, Position, Polygon, MultiPolygon } from "geojson";
@@ -46,6 +47,7 @@ interface CircleDataPoint {
   position: [number, number];
   count: number;
   label: string;
+  formalLabel: string;
   countsKey: string;
 }
 
@@ -71,6 +73,38 @@ interface HeatmapDataPoint {
   weight: number;
 }
 
+interface LocationFilmEntry {
+  filmId: string;
+  title: string;
+  year: number | null;
+  type: "film" | "tv";
+  director?: string;
+  genres?: string[];
+  imdbId?: string;
+  imageUrl?: string;
+}
+
+interface CuratedLocation {
+  locationId: string;
+  name: string;
+  lat: number;
+  lng: number;
+  cdKey: string | null;
+  zipKey: string | null;
+  films: LocationFilmEntry[];
+}
+
+interface LocationsData {
+  metadata: {
+    generatedAt: string;
+    totalLocations: number;
+    totalFilms: number;
+    enrichedAt?: string;
+    enrichedFilms?: number;
+  };
+  locations: CuratedLocation[];
+}
+
 
 // --- Constants ---
 
@@ -80,6 +114,70 @@ const BOROUGH_NAMES: Record<number, string> = {
   3: "Brooklyn",
   4: "Queens",
   5: "Staten Island",
+};
+
+/** Colloquial neighborhood names for each community district.
+ *  Keys match the counts-key format ("Borough-N"). */
+const CD_NEIGHBORHOOD_NAMES: Record<string, string> = {
+  "Manhattan-1": "Financial District / Tribeca",
+  "Manhattan-2": "Lower East Side / Chinatown",
+  "Manhattan-3": "East Village / Lower East Side",
+  "Manhattan-4": "Chelsea / Clinton",
+  "Manhattan-5": "Midtown",
+  "Manhattan-6": "Stuyvesant Town / Turtle Bay",
+  "Manhattan-7": "Upper West Side",
+  "Manhattan-8": "Upper East Side",
+  "Manhattan-9": "Morningside Heights / Hamilton Heights",
+  "Manhattan-10": "Central Harlem",
+  "Manhattan-11": "East Harlem",
+  "Manhattan-12": "Washington Heights / Inwood",
+  "Bronx-1": "Mott Haven / Melrose",
+  "Bronx-2": "Hunts Point / Longwood",
+  "Bronx-3": "Morrisania / Crotona",
+  "Bronx-4": "Highbridge / Concourse",
+  "Bronx-5": "Fordham / University Heights",
+  "Bronx-6": "Belmont / East Tremont",
+  "Bronx-7": "Kingsbridge / Riverdale",
+  "Bronx-8": "Throgs Neck / Pelham Bay",
+  "Bronx-9": "Parkchester / Soundview",
+  "Bronx-10": "Co-op City / Eastchester",
+  "Bronx-11": "Morris Park / Pelham Parkway",
+  "Bronx-12": "Williamsbridge / Baychester",
+  "Brooklyn-1": "Williamsburg / Greenpoint",
+  "Brooklyn-2": "Downtown Brooklyn / Fort Greene",
+  "Brooklyn-3": "Bedford-Stuyvesant",
+  "Brooklyn-4": "Bushwick",
+  "Brooklyn-5": "East New York / Starrett City",
+  "Brooklyn-6": "Park Slope / Carroll Gardens",
+  "Brooklyn-7": "Sunset Park",
+  "Brooklyn-8": "Crown Heights North",
+  "Brooklyn-9": "Crown Heights South / Prospect Lefferts",
+  "Brooklyn-10": "Bay Ridge",
+  "Brooklyn-11": "Bensonhurst",
+  "Brooklyn-12": "Borough Park",
+  "Brooklyn-13": "Coney Island",
+  "Brooklyn-14": "Flatbush / Midwood",
+  "Brooklyn-15": "Sheepshead Bay",
+  "Brooklyn-16": "Brownsville",
+  "Brooklyn-17": "East Flatbush",
+  "Brooklyn-18": "Canarsie / Flatlands",
+  "Queens-1": "Astoria / Long Island City",
+  "Queens-2": "Woodside / Sunnyside",
+  "Queens-3": "Jackson Heights / East Elmhurst",
+  "Queens-4": "Elmhurst / Corona",
+  "Queens-5": "Ridgewood / Maspeth",
+  "Queens-6": "Forest Hills / Rego Park",
+  "Queens-7": "Flushing",
+  "Queens-8": "Fresh Meadows / Hillcrest",
+  "Queens-9": "Woodhaven / Richmond Hill",
+  "Queens-10": "Howard Beach / Ozone Park",
+  "Queens-11": "Bayside / Little Neck",
+  "Queens-12": "Jamaica / St. Albans",
+  "Queens-13": "Queens Village / Bellerose",
+  "Queens-14": "Rockaway / Broad Channel",
+  "Staten Island-1": "North Shore",
+  "Staten Island-2": "Mid-Island",
+  "Staten Island-3": "South Shore",
 };
 
 const INITIAL_VIEW_STATE = {
@@ -170,6 +268,11 @@ function formatMonth(yyyymm: string): string {
   return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
+/** Escape HTML special characters to prevent XSS from user-controlled data. */
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
@@ -212,7 +315,7 @@ function computeCentroid(geometry: Polygon | MultiPolygon): [number, number] {
 const BASE = import.meta.env.BASE_URL;
 
 async function main(): Promise<void> {
-  const [counts, cdBoundaries, zipBoundaries, captions] = await Promise.all([
+  const [counts, cdBoundaries, zipBoundaries, captions, locationsData] = await Promise.all([
     fetch(`${BASE}data/counts.json`).then((r) => r.json() as Promise<CountsData>),
     fetch(`${BASE}data/cd-boundaries.geojson`).then(
       (r) => r.json() as Promise<FeatureCollection<Geometry, CdProperties>>,
@@ -222,6 +325,9 @@ async function main(): Promise<void> {
     ),
     fetch(`${BASE}data/captions.json`)
       .then((r) => r.ok ? r.json() as Promise<CaptionsData> : null)
+      .catch(() => null),
+    fetch(`${BASE}data/locations.json`)
+      .then((r) => r.ok ? r.json() as Promise<LocationsData> : null)
       .catch(() => null),
   ]);
 
@@ -264,6 +370,8 @@ async function main(): Promise<void> {
     vizMode: VizMode;
     grain: GrainMode;
     categories: Set<string> | null;
+    showLocations: boolean;
+    decade: number | null;
   } {
     const params = parseHash();
 
@@ -308,7 +416,20 @@ async function main(): Promise<void> {
       }
     }
 
-    return { month, monthIdx, unit, vizMode, grain, categories };
+    // loc — "1" means locations layer on
+    const showLocations = params.get("loc") === "1" && locationsData !== null;
+
+    // decade — must be a valid decade number
+    let decade: number | null = null;
+    const decadeParam = params.get("decade");
+    if (decadeParam) {
+      const d = parseInt(decadeParam, 10);
+      if (!isNaN(d) && d >= 1800 && d <= 2100 && d % 10 === 0) {
+        decade = d;
+      }
+    }
+
+    return { month, monthIdx, unit, vizMode, grain, categories, showLocations, decade };
   }
 
   // Restore state from URL hash before declaring state variables.
@@ -321,6 +442,8 @@ async function main(): Promise<void> {
   let currentVizMode: VizMode = hashState.vizMode;
   let currentGrain: GrainMode = hashState.grain;
   let currentMonthIdx = hashState.monthIdx;
+  let showLocations = hashState.showLocations;
+  let currentDecade: number | null = hashState.decade;
 
   /** Serialize current state to the URL hash via replaceState (no history entry). */
   function updateHash(): void {
@@ -331,6 +454,12 @@ async function main(): Promise<void> {
     pairs.push(`grain=${encodeURIComponent(currentGrain)}`);
     if (activeCategories !== null && activeCategories.size > 0) {
       pairs.push(`cats=${encodeURIComponent([...activeCategories].sort().join(","))}`);
+    }
+    if (showLocations) {
+      pairs.push("loc=1");
+    }
+    if (currentDecade !== null) {
+      pairs.push(`decade=${currentDecade}`);
     }
     const newHash = `#${pairs.join("&")}`;
     // replaceState avoids polluting the browser's back/forward history
@@ -350,9 +479,15 @@ async function main(): Promise<void> {
     }, 300);
   }
 
+  // --- Semantic landmarks ---
+  const appEl = document.getElementById("app");
+  if (appEl) appEl.setAttribute("role", "main");
+
   // --- Build toolbar card with descriptive toggle rows ---
   const toolbar = document.createElement("div");
   toolbar.id = "toolbar";
+  toolbar.setAttribute("role", "region");
+  toolbar.setAttribute("aria-label", "Visualization controls");
 
   // Helper: create a toolbar row with heading, description, and toggle button
   function createToolbarRow(
@@ -412,12 +547,140 @@ async function main(): Promise<void> {
     "Toggle block-level heatmap",
   );
 
-  toolbar.append(unitRow, vizRow, grainRow);
+  // --- Type accordion (category filter inside toolbar) ---
+  const typeRow = document.createElement("div");
+  typeRow.className = "toolbar-row";
+  const typeInfo = document.createElement("div");
+  typeInfo.className = "toolbar-info";
+  const typeHeading = document.createElement("span");
+  typeHeading.className = "toolbar-heading";
+  typeHeading.textContent = "Type";
+  const typeDesc = document.createElement("span");
+  typeDesc.className = "toolbar-desc";
+  typeDesc.textContent = "Filter by permit category";
+  typeInfo.append(typeHeading, typeDesc);
+  const typeChevron = document.createElement("button");
+  typeChevron.className = "toolbar-toggle toolbar-toggle-chevron";
+  typeChevron.textContent = "All";
+  typeChevron.setAttribute("aria-label", "Toggle category filter");
+  typeRow.append(typeInfo, typeChevron);
+  const typeExpandable = document.createElement("div");
+  typeExpandable.className = "toolbar-expandable";
+  const typeInner = document.createElement("div");
+  typeInner.className = "toolbar-expandable-inner";
+  typeExpandable.appendChild(typeInner);
+
+  typeRow.addEventListener("click", (ev) => {
+    if (ev.target !== typeChevron) typeChevron.click();
+  });
+  typeChevron.addEventListener("click", (e) => {
+    e.stopPropagation();
+    typeExpandable.classList.toggle("expanded");
+    typeChevron.classList.toggle("chevron-up");
+  });
+
+  // --- Landmarks accordion (toggle + decade pills inside toolbar) ---
+  let landmarksRow: HTMLDivElement | null = null;
+  let landmarksToggle: HTMLButtonElement | null = null;
+  let landmarksExpandable: HTMLDivElement | null = null;
+  const decadePillsContainer = document.createElement("div");
+  decadePillsContainer.className = "toolbar-expandable-inner decades-grid";
+
+  const availableDecades: number[] = [];
+  if (locationsData) {
+    const decadeSet = new Set<number>();
+    for (const loc of locationsData.locations) {
+      for (const f of loc.films) {
+        if (f.year !== null) decadeSet.add(Math.floor(f.year / 10) * 10);
+      }
+    }
+    availableDecades.push(...[...decadeSet].sort((a, b) => a - b));
+
+    landmarksRow = document.createElement("div");
+    landmarksRow.className = "toolbar-row";
+    const lmInfo = document.createElement("div");
+    lmInfo.className = "toolbar-info";
+    const lmHeading = document.createElement("span");
+    lmHeading.className = "toolbar-heading";
+    lmHeading.textContent = "Landmarks";
+    const lmDesc = document.createElement("span");
+    lmDesc.className = "toolbar-desc";
+    lmDesc.textContent = "Filming location pins";
+    lmInfo.append(lmHeading, lmDesc);
+
+    landmarksToggle = document.createElement("button");
+    landmarksToggle.className = "toolbar-toggle";
+    landmarksToggle.textContent = showLocations ? "On" : "Off";
+    landmarksToggle.setAttribute("aria-label", "Toggle filming landmarks");
+    landmarksToggle.setAttribute("aria-pressed", String(showLocations));
+    if (showLocations) landmarksToggle.classList.add("toggle-active");
+    landmarksRow.append(lmInfo, landmarksToggle);
+
+    landmarksRow.addEventListener("click", (ev) => {
+      if (ev.target !== landmarksToggle) landmarksToggle!.click();
+    });
+
+    landmarksExpandable = document.createElement("div");
+    landmarksExpandable.className = "toolbar-expandable";
+    if (showLocations) landmarksExpandable.classList.add("expanded");
+    landmarksExpandable.appendChild(decadePillsContainer);
+  }
+
+  // Assemble toolbar
+  toolbar.append(unitRow, vizRow, grainRow, typeRow, typeExpandable);
+  if (landmarksRow && landmarksExpandable) {
+    toolbar.append(landmarksRow, landmarksExpandable);
+  }
   document.body.appendChild(toolbar);
+
+  function buildDecadePills(): void {
+    decadePillsContainer.innerHTML = "";
+    const allPill = document.createElement("button");
+    allPill.textContent = "All";
+    allPill.classList.add("decade-pill");
+    if (currentDecade === null) allPill.classList.add("decade-active");
+    allPill.addEventListener("click", () => {
+      currentDecade = null;
+      updateDecadePillStates();
+      updateLayers();
+    });
+    decadePillsContainer.appendChild(allPill);
+
+    for (const d of availableDecades) {
+      const pill = document.createElement("button");
+      pill.textContent = `${d}s`;
+      pill.classList.add("decade-pill");
+      pill.setAttribute("data-decade", String(d));
+      if (currentDecade === d) pill.classList.add("decade-active");
+      pill.addEventListener("click", () => {
+        currentDecade = currentDecade === d ? null : d;
+        updateDecadePillStates();
+        updateLayers();
+      });
+      decadePillsContainer.appendChild(pill);
+    }
+  }
+
+  function updateDecadePillStates(): void {
+    decadePillsContainer.querySelectorAll(".decade-pill").forEach((el) => {
+      const decadeAttr = el.getAttribute("data-decade");
+      if (decadeAttr === null) {
+        el.classList.toggle("decade-active", currentDecade === null);
+      } else {
+        el.classList.toggle("decade-active", currentDecade === parseInt(decadeAttr, 10));
+      }
+    });
+  }
+
+  if (availableDecades.length > 0) {
+    buildDecadePills();
+  }
 
   // --- Build notch timeline ---
   const timeline = document.createElement("div");
   timeline.id = "timeline";
+  timeline.setAttribute("role", "region");
+  timeline.setAttribute("aria-label", "Month timeline");
 
   const timelineLabel = document.createElement("div");
   timelineLabel.id = "timeline-label";
@@ -445,38 +708,56 @@ async function main(): Promise<void> {
     });
   }
 
+  /** Tooltip elements paired with notch elements, for in-place text updates. */
+  const notchTooltips: HTMLDivElement[] = [];
+
+  /** Create notch DOM elements once. Subsequent updates use updateNotchHeights. */
   function buildNotches(): void {
-    timelineTrack.innerHTML = "";
-    notchElements.length = 0;
+    const needsCreate = notchElements.length === 0;
+    if (needsCreate) {
+      timelineTrack.innerHTML = "";
+      notchElements.length = 0;
+      notchTooltips.length = 0;
+
+      for (let i = 0; i < months.length; i++) {
+        const notch = document.createElement("div");
+        notch.className = "notch";
+
+        // Hover tooltip (hidden by default, shown via CSS)
+        const tooltip = document.createElement("div");
+        tooltip.className = "notch-tooltip";
+        notch.appendChild(tooltip);
+
+        if (i === currentMonthIdx) {
+          notch.classList.add("notch-active");
+        }
+
+        const idx = i; // capture for closure
+        notch.addEventListener("click", () => {
+          currentMonthIdx = idx;
+          currentMonth = months[idx];
+          updateLayers();
+        });
+
+        timelineTrack.appendChild(notch);
+        notchElements.push(notch);
+        notchTooltips.push(tooltip);
+      }
+    }
+    // Update heights and tooltips in-place (no DOM teardown)
+    updateNotchHeights();
+  }
+
+  /** Update notch heights and tooltip text in-place using scaleY for GPU compositing. */
+  function updateNotchHeights(): void {
     const totals = computeMonthTotals();
     const maxTotal = Math.max(...totals, 1);
-
-    for (let i = 0; i < months.length; i++) {
-      const notch = document.createElement("div");
-      notch.className = "notch";
-      const heightPct = Math.max(8, (totals[i] / maxTotal) * 100); // min 8% so empty months are still visible
-      notch.style.height = `${heightPct}%`;
-
-      // Hover tooltip (hidden by default, shown via CSS)
-      const tooltip = document.createElement("div");
-      tooltip.className = "notch-tooltip";
-      tooltip.textContent = `${formatMonth(months[i])}: ${totals[i]}`;
-      notch.appendChild(tooltip);
-
-      if (i === currentMonthIdx) {
-        notch.classList.add("notch-active");
-      }
-
-      const idx = i; // capture for closure
-      notch.addEventListener("click", () => {
-        currentMonthIdx = idx;
-        currentMonth = months[idx];
-        // updateLayers() calls updateActiveNotch() internally
-        updateLayers();
-      });
-
-      timelineTrack.appendChild(notch);
-      notchElements.push(notch);
+    for (let i = 0; i < notchElements.length; i++) {
+      const scale = Math.max(0.08, totals[i] / maxTotal); // min 8% so empty months visible
+      notchElements[i].style.transform = `scaleY(${scale})`;
+      // Inverse scale used by tooltip to counter the parent's scaleY
+      notchElements[i].style.setProperty("--notch-scale-inv", String(1 / scale));
+      notchTooltips[i].textContent = `${formatMonth(months[i])}: ${totals[i]}`;
     }
   }
 
@@ -525,6 +806,8 @@ async function main(): Promise<void> {
   // --- Color legend ---
   const legend = document.createElement("div");
   legend.id = "legend";
+  legend.setAttribute("role", "img");
+  legend.setAttribute("aria-label", "Color legend: shoot count from low to high");
   const legendGradient = document.createElement("div");
   legendGradient.id = "legend-gradient";
   const legendLabels = document.createElement("div");
@@ -549,9 +832,15 @@ async function main(): Promise<void> {
     `Data: <a href="https://data.cityofnewyork.us/City-Government/Film-Permits/tg4x-b46p" target="_blank" rel="noopener">NYC Open Data Film Permits</a>`;
   document.body.appendChild(attribution);
 
-  // --- Category filter ---
-  const filterBar = document.createElement("div");
-  filterBar.id = "category-filter";
+  // --- Category filter pills (inside toolbar "Type" expandable) ---
+  /** Update the type chevron label to reflect current selection. */
+  function updateTypeLabel(): void {
+    if (activeCategories === null) {
+      typeChevron.textContent = "All";
+    } else {
+      typeChevron.textContent = `${activeCategories.size}`;
+    }
+  }
 
   if (counts.metadata.categories && counts.metadata.categories.length > 0) {
     const allBtn = document.createElement("button");
@@ -559,12 +848,13 @@ async function main(): Promise<void> {
     allBtn.classList.add("cat-pill", "cat-active");
     allBtn.addEventListener("click", () => {
       activeCategories = null;
-      filterBar.querySelectorAll(".cat-pill").forEach((el) => el.classList.remove("cat-active"));
+      typeInner.querySelectorAll(".cat-pill").forEach((el) => el.classList.remove("cat-active"));
       allBtn.classList.add("cat-active");
+      updateTypeLabel();
       buildNotches();
       updateLayers();
     });
-    filterBar.appendChild(allBtn);
+    typeInner.appendChild(allBtn);
 
     for (const cat of counts.metadata.categories) {
       const pill = document.createElement("button");
@@ -581,7 +871,7 @@ async function main(): Promise<void> {
           activeCategories.add(cat);
         }
         // Update pill active states
-        filterBar.querySelectorAll(".cat-pill").forEach((el) => {
+        typeInner.querySelectorAll(".cat-pill").forEach((el) => {
           const pillText = el.textContent ?? "";
           if (pillText === "All") {
             el.classList.toggle("cat-active", activeCategories === null);
@@ -589,12 +879,12 @@ async function main(): Promise<void> {
             el.classList.toggle("cat-active", activeCategories !== null && activeCategories.has(pillText));
           }
         });
+        updateTypeLabel();
         buildNotches();
         updateLayers();
       });
-      filterBar.appendChild(pill);
+      typeInner.appendChild(pill);
     }
-    document.body.appendChild(filterBar);
   }
 
 
@@ -610,18 +900,21 @@ async function main(): Promise<void> {
   function resolveFeature(
     f: AreaFeature,
     unit: UnitMode,
-  ): { countsKey: string; label: string } | null {
+  ): { countsKey: string; label: string; formalLabel: string } | null {
     if (unit === "cd") {
       const props = f.properties as CdProperties;
       const key = cdKey(props.boro_cd);
       if (!key) return null;
       const [borough, cdNum] = key.split("-");
-      return { countsKey: key, label: `${borough} CD ${cdNum}` };
+      const formalLabel = `${borough} CD ${cdNum}`;
+      const label = CD_NEIGHBORHOOD_NAMES[key] ?? formalLabel;
+      return { countsKey: key, label, formalLabel };
     }
     const props = f.properties as ZipProperties;
     const zip = props.modzcta;
     if (!zip) return null;
-    return { countsKey: zip, label: `Zip ${zip}` };
+    const label = `Zip ${zip}`;
+    return { countsKey: zip, label, formalLabel: label };
   }
 
   function computeFilteredCounts(
@@ -704,8 +997,7 @@ async function main(): Promise<void> {
   }
 
   // --- Layer builder ---
-  function buildLayer(month: string, unit: UnitMode): GeoJsonLayer {
-    const countsMap = computeFilteredCounts(unit, activeCategories);
+  function buildLayer(month: string, unit: UnitMode, countsMap: Record<string, Record<string, number>>): GeoJsonLayer {
     const maxCount = computeMaxCount(countsMap, month);
     const data = unit === "cd" ? cdBoundaries : zipBoundaries;
     const catTrigger = categoryTrigger();
@@ -742,8 +1034,7 @@ async function main(): Promise<void> {
   }
 
   // --- Circle layer builder ---
-  function buildCircleLayer(month: string, unit: UnitMode): ScatterplotLayer {
-    const countsMap = computeFilteredCounts(unit, activeCategories);
+  function buildCircleLayer(month: string, unit: UnitMode, countsMap: Record<string, Record<string, number>>): ScatterplotLayer {
     const maxCount = computeMaxCount(countsMap, month);
     const features = unit === "cd" ? cdBoundaries.features : zipBoundaries.features;
 
@@ -753,7 +1044,7 @@ async function main(): Promise<void> {
       if (!resolved) continue;
       const count = countsMap[resolved.countsKey]?.[month] ?? 0;
       const centroid = computeCentroid(f.geometry as Polygon | MultiPolygon);
-      data.push({ position: centroid, count, label: resolved.label, countsKey: resolved.countsKey });
+      data.push({ position: centroid, count, label: resolved.label, formalLabel: resolved.formalLabel, countsKey: resolved.countsKey });
     }
 
     const MAX_RADIUS = 2000;
@@ -787,13 +1078,13 @@ async function main(): Promise<void> {
   }
 
   /** Build all layers for the current viz mode. Base boundary always included. */
-  function buildVisualizationLayers(month: string, unit: UnitMode): (GeoJsonLayer | ScatterplotLayer)[] {
+  function buildVisualizationLayers(month: string, unit: UnitMode, countsMap: Record<string, Record<string, number>>): (GeoJsonLayer | ScatterplotLayer)[] {
     const base = buildBaseLayer(unit);
     if (currentVizMode === "bars") {
-      return [base, buildLayer(month, unit)];
+      return [base, buildLayer(month, unit, countsMap)];
     }
     // Circles: base boundaries underneath, circles on top
-    return [base, buildCircleLayer(month, unit)];
+    return [base, buildCircleLayer(month, unit, countsMap)];
   }
 
   // --- Heatmap layer for block-level grain ---
@@ -827,6 +1118,37 @@ async function main(): Promise<void> {
     });
   }
 
+  // --- Locations layer (curated landmark pins) ---
+  function filterLocationsByDecade(locations: CuratedLocation[], decade: number | null): CuratedLocation[] {
+    if (decade === null) return locations;
+    return locations.filter((loc) =>
+      loc.films.some((f) => f.year !== null && Math.floor(f.year / 10) * 10 === decade),
+    );
+  }
+
+  function buildLocationsLayer(locations: CuratedLocation[], decade: number | null): ScatterplotLayer {
+    const filtered = filterLocationsByDecade(locations, decade);
+    return new ScatterplotLayer({
+      id: "locations-layer",
+      data: filtered,
+      pickable: true,
+      opacity: 0.9,
+      stroked: true,
+      filled: true,
+      getPosition: (d: CuratedLocation) => [d.lng, d.lat],
+      getRadius: 6,
+      radiusMinPixels: 5,
+      radiusMaxPixels: 10,
+      radiusUnits: "pixels" as const,
+      getFillColor: [255, 200, 60, 220],
+      getLineColor: [255, 255, 255, 200],
+      lineWidthMinPixels: 1.5,
+      updateTriggers: {
+        getPosition: [decade],
+      },
+    });
+  }
+
   /** Lazy-load blocks.json. Returns true if data is (now) available. */
   async function ensureBlocksData(): Promise<boolean> {
     if (blocksData) return true;
@@ -857,36 +1179,58 @@ async function main(): Promise<void> {
     unitRow.style.display = visible ? "" : "none";
     vizRow.style.display = visible ? "" : "none";
     legend.style.display = visible ? "block" : "none";
-    // filterBar may not be in the DOM if no categories exist, but setting
-    // display on a detached element is harmless.
-    filterBar.style.display = visible ? "flex" : "none";
+    typeRow.style.display = visible ? "" : "none";
+    typeExpandable.style.display = visible ? "" : "none";
   }
 
+  // deck.gl tooltip uses inline styles (no CSS class support), so these values
+  // mirror the CSS design tokens. Update in tandem with :root tokens in style.css.
   const tooltipStyle = {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    fontSize: "12px",
-    padding: "8px 12px",
-    background: "rgba(15, 15, 25, 0.95)",
-    color: "#f0f0f0",
-    borderRadius: "8px",
+    fontFamily: "'Inter', system-ui, sans-serif",      // --font-body
+    fontSize: "12px",                                   // --text-caption
+    padding: "8px 12px",                                // --space-sm --space-md
+    background: "rgba(15, 15, 25, 0.95)",               // ~--color-surface-solid
+    color: "#f0f0f0",                                   // --color-fg
+    borderRadius: "8px",                                // --radius-md
     lineHeight: "1.5",
     maxWidth: "240px",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
-    backdropFilter: "blur(12px)",
+    border: "1px solid rgba(255, 255, 255, 0.1)",       // ~--color-border
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",        // ~--shadow-panel
+    backdropFilter: "blur(12px)",                       // ~--blur-tooltip (14px)
   };
 
   // --- Deck instance ---
-  // Lock map manipulation but keep picking active for tooltips and clicks
-  const lockedController = {
-    scrollZoom: false,
-    dragPan: false,
-    dragRotate: false,
-    doubleClickZoom: false,
-    touchZoom: false,
-    touchRotate: false,
-    keyboard: false,
+  // Allow pan and zoom but constrain to NYC area so the map can't be dragged off-screen.
+  // Rotation stays locked to preserve the isometric/top-down camera angles.
+  const NYC_BOUNDS = {
+    minLng: -74.35,
+    maxLng: -73.65,
+    minLat: 40.45,
+    maxLat: 40.95,
+    minZoom: 9,
+    maxZoom: 16,
   };
+
+  const boundedController = {
+    scrollZoom: true,
+    dragPan: true,
+    dragRotate: true,
+    doubleClickZoom: true,
+    touchZoom: true,
+    touchRotate: true,
+    keyboard: false, // arrow keys used for timeline slider
+  };
+
+  /** Clamp a view state to NYC bounds so the map can't be dragged away. */
+  function clampViewState<T extends MapViewState>(viewState: T): T {
+    return {
+      ...viewState,
+      longitude: Math.max(NYC_BOUNDS.minLng, Math.min(NYC_BOUNDS.maxLng, viewState.longitude)),
+      latitude: Math.max(NYC_BOUNDS.minLat, Math.min(NYC_BOUNDS.maxLat, viewState.latitude)),
+      zoom: Math.max(NYC_BOUNDS.minZoom, Math.min(NYC_BOUNDS.maxZoom, viewState.zoom)),
+      pitch: Math.max(0, Math.min(60, viewState.pitch ?? 0)),
+    };
+  }
 
   // Choose initial camera based on restored viz/grain mode.
   // Circles and block heatmap look best top-down; bars use isometric pitch.
@@ -908,7 +1252,7 @@ async function main(): Promise<void> {
   // Use a non-narrowing check so TS doesn't infer `never` inside the callback.
   if (activeCategories !== null && activeCategories.size > 0) {
     const restoredCats = activeCategories;
-    filterBar.querySelectorAll(".cat-pill").forEach((el) => {
+    typeInner.querySelectorAll(".cat-pill").forEach((el) => {
       const pillText = el.textContent ?? "";
       if (pillText === "All") {
         el.classList.toggle("cat-active", false);
@@ -916,17 +1260,32 @@ async function main(): Promise<void> {
         el.classList.toggle("cat-active", restoredCats.has(pillText));
       }
     });
+    updateTypeLabel();
   }
 
   const deck = new Deck({
     parent: document.querySelector<HTMLDivElement>("#app")!,
     initialViewState: heroSeen ? restoredViewState : HERO_VIEW_STATE,
-    controller: lockedController,
-    layers: buildVisualizationLayers(currentMonth, currentUnit),
-    getTooltip: ({ object }: { object?: AreaFeature | CircleDataPoint }) => {
+    controller: boundedController,
+    onViewStateChange: <T extends MapViewState>({ viewState }: { viewState: T }) => {
+      return clampViewState(viewState);
+    },
+    layers: buildVisualizationLayers(currentMonth, currentUnit, computeFilteredCounts(currentUnit, activeCategories)),
+    getTooltip: ({ object }: { object?: AreaFeature | CircleDataPoint | CuratedLocation }) => {
       // No tooltip in block heatmap mode
       if (currentGrain === "block") return null;
       if (!object) return null;
+
+      // Location pin tooltip
+      if ("locationId" in object) {
+        const loc = object as CuratedLocation;
+        const filmCount = loc.films.length;
+        const filmWord = filmCount === 1 ? "film" : "films";
+        return {
+          html: `<strong>${escapeHtml(loc.name)}</strong><br/><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">${filmCount}</span> ${filmWord}`,
+          style: tooltipStyle,
+        };
+      }
 
       let label: string;
       let count: number;
@@ -950,7 +1309,7 @@ async function main(): Promise<void> {
         style: tooltipStyle,
       };
     },
-    onClick: ({ object }: { object?: AreaFeature | CircleDataPoint }) => {
+    onClick: ({ object }: { object?: AreaFeature | CircleDataPoint | CuratedLocation }) => {
       // No detail panel in block heatmap mode
       if (currentGrain === "block") return;
       if (!object) {
@@ -958,25 +1317,34 @@ async function main(): Promise<void> {
         return;
       }
 
+      // Location pin click — open location detail
+      if ("locationId" in object) {
+        openLocationDetail(object as CuratedLocation);
+        return;
+      }
+
       let countsKey: string;
       let label: string;
+      let formalLabel: string;
       let centroid: [number, number];
 
       if ("position" in object && "countsKey" in object) {
         const d = object as CircleDataPoint;
         countsKey = d.countsKey;
         label = d.label;
+        formalLabel = d.formalLabel;
         centroid = d.position;
       } else {
         const resolved = resolveFeature(object as AreaFeature, currentUnit);
         if (!resolved) return;
         countsKey = resolved.countsKey;
         label = resolved.label;
+        formalLabel = resolved.formalLabel;
         const feat = object as AreaFeature;
         centroid = computeCentroid(feat.geometry as Polygon | MultiPolygon);
       }
 
-      openDetail(countsKey, label, centroid);
+      openDetail(countsKey, label, formalLabel, centroid);
     },
     style: { background: "transparent" },
   });
@@ -989,7 +1357,7 @@ async function main(): Promise<void> {
 
   // --- Stagger UI elements in after hero dismisses ---
   function revealUI(): void {
-    const elements = [titleOverlay, captionEl, legend, filterBar, toolbar, timeline, attribution];
+    const elements = [titleOverlay, captionEl, legend, timeline, toolbar, attribution];
     elements.forEach((el, i) => {
       el.classList.add("ui-fade-in");
       el.style.animationDelay = `${200 + i * 80}ms`;
@@ -1000,7 +1368,7 @@ async function main(): Promise<void> {
   function dismissHero(): void {
     if (heroDismissed) return;
     heroDismissed = true;
-    sessionStorage.setItem("heroShown", "1");
+    try { sessionStorage.setItem("heroShown", "1"); } catch { /* sandboxed */ }
     hero.classList.add("hero-fade");
     // Cinematic pull-back to overview — use the restored view state so
     // permalink-specified viz/grain modes get the correct camera angle.
@@ -1036,13 +1404,16 @@ async function main(): Promise<void> {
     }
   }
 
-  function openDetail(countsKey: string, label: string, _centroid: [number, number]): void {
+  let detailAreaFormalLabel: string | null = null;
+
+  function openDetail(countsKey: string, label: string, formalLabel: string, _centroid: [number, number]): void {
     // Track whether this is a refresh (panel already open) vs first open.
     // When refreshing, suppress the entrance animation to avoid flickering.
     const isRefresh = detailOpen && detailPanel.classList.contains("open");
 
     detailAreaKey = countsKey;
     detailAreaLabel = label;
+    detailAreaFormalLabel = formalLabel;
     detailOpen = true;
 
     // Build panel content
@@ -1088,9 +1459,47 @@ async function main(): Promise<void> {
     const cx = ci >= 0 ? pts[ci].x : 0;
     const cy = ci >= 0 ? pts[ci].y : 0;
 
+    // Build "Notable films" section if locations data has films matching this area
+    let notableFilmsHtml = "";
+    if (locationsData && showLocations) {
+      const areaKey = currentUnit === "cd" ? "cdKey" : "zipKey";
+      const matchingLocations = locationsData.locations.filter(
+        (loc) => loc[areaKey] === countsKey,
+      );
+      // Flatten films across matched locations
+      const areaFilms: Array<{ title: string; year: number | null; locationName: string }> = [];
+      for (const loc of matchingLocations) {
+        const films = currentDecade !== null
+          ? loc.films.filter((f) => f.year !== null && Math.floor(f.year / 10) * 10 === currentDecade)
+          : loc.films;
+        for (const f of films) {
+          areaFilms.push({ title: f.title, year: f.year, locationName: loc.name });
+        }
+      }
+      if (areaFilms.length > 0) {
+        const MAX_DISPLAY = 10;
+        const displayed = areaFilms.slice(0, MAX_DISPLAY);
+        const remaining = areaFilms.length - displayed.length;
+        const filmListHtml = displayed.map((f) =>
+          `<li class="notable-film-item">${escapeHtml(f.title)} (${f.year ?? "?"}) <span class="notable-film-location">@ ${escapeHtml(f.locationName)}</span></li>`,
+        ).join("");
+        const moreHtml = remaining > 0
+          ? `<li class="notable-film-more">and ${remaining} more</li>` : "";
+        notableFilmsHtml = `
+          <div class="detail-section">
+            <h3>Notable films</h3>
+            <ul class="notable-films-list">${filmListHtml}${moreHtml}</ul>
+          </div>`;
+      }
+    }
+
+    const formalSubtitle = formalLabel !== label
+      ? `<span class="detail-formal-label">${escapeHtml(formalLabel)}</span>` : "";
+
     detailPanel.innerHTML = `
       <button id="detail-close" aria-label="Close detail panel">\u2715</button>
-      <h2>${label}</h2>
+      <h2>${escapeHtml(label)}</h2>
+      ${formalSubtitle}
       <div class="detail-stat">
         <span class="detail-big">${currentCount}</span>
         <span class="detail-label">shoots in ${formatMonth(currentMonth)} <span class="${trendClass}">${trendChar}</span></span>
@@ -1121,6 +1530,7 @@ async function main(): Promise<void> {
           ${monthEntries.map((e) => `<li><span>${formatMonth(e.month)}</span><span style="font-family:var(--font-mono);color:var(--color-fg-muted)">${e.count}</span></li>`).join("")}
         </ul>
       </div>
+      ${notableFilmsHtml}
     `;
 
     if (isRefresh) {
@@ -1133,7 +1543,7 @@ async function main(): Promise<void> {
     detailPanel.classList.add("open");
 
     // Close button handler
-    detailPanel.querySelector("#detail-close")!.addEventListener("click", closeDetail);
+    detailPanel.querySelector("#detail-close")?.addEventListener("click", closeDetail);
   }
 
   function closeDetail(): void {
@@ -1141,7 +1551,72 @@ async function main(): Promise<void> {
     detailOpen = false;
     detailAreaKey = null;
     detailAreaLabel = null;
+    detailAreaFormalLabel = null;
     detailPanel.classList.remove("open", "no-animate");
+  }
+
+  /** Open detail panel for a curated filming location pin. */
+  function openLocationDetail(location: CuratedLocation): void {
+    detailOpen = true;
+    detailAreaKey = null;
+    detailAreaLabel = null;
+
+    // Filter films by active decade if set
+    const films = currentDecade !== null
+      ? location.films.filter((f) => f.year !== null && Math.floor(f.year / 10) * 10 === currentDecade)
+      : location.films;
+
+    // Build film list HTML — escape all user-controlled strings from Wikidata
+    const filmListHtml = films.map((f) => {
+      const safeTitle = escapeHtml(f.title);
+      const typeBadge = f.type === "tv"
+        ? `<span class="detail-film-badge badge-tv">TV</span>`
+        : `<span class="detail-film-badge badge-film">Film</span>`;
+      const directorHtml = f.director
+        ? `<span class="detail-film-meta">Dir: ${escapeHtml(f.director)}</span>` : "";
+      const genreHtml = f.genres && f.genres.length > 0
+        ? `<span class="detail-film-meta">${f.genres.map(escapeHtml).slice(0, 3).join(", ")}</span>` : "";
+      const imdbHtml = f.imdbId
+        ? `<a class="detail-film-imdb" href="https://www.imdb.com/title/${encodeURIComponent(f.imdbId)}/" target="_blank" rel="noopener">IMDb</a>` : "";
+      const posterHtml = f.imageUrl
+        ? `<img class="detail-film-poster" src="${escapeHtml(f.imageUrl)}" alt="${safeTitle}" loading="lazy" onerror="this.style.display='none'" />` : "";
+
+      return `
+        <div class="detail-film-entry">
+          <div class="detail-film-header">
+            <span class="detail-film-title">${safeTitle}</span>
+            <span class="detail-film-year">${f.year ?? "?"}</span>
+            ${typeBadge}
+          </div>
+          <div class="detail-film-body">
+            ${posterHtml}
+            <div class="detail-film-info">
+              ${directorHtml}
+              ${genreHtml}
+              ${imdbHtml}
+            </div>
+          </div>
+        </div>`;
+    }).join("");
+
+    detailPanel.innerHTML = `
+      <button id="detail-close" aria-label="Close detail panel">\u2715</button>
+      <h2>${escapeHtml(location.name)}</h2>
+      <div class="detail-stat">
+        <span class="detail-big">${films.length}</span>
+        <span class="detail-label">${films.length === 1 ? "film" : "films"} shot here${currentDecade !== null ? ` (${currentDecade}s)` : ""}</span>
+      </div>
+      <div class="detail-section">
+        <h3>Films</h3>
+        <div class="detail-films-list">
+          ${filmListHtml || '<span class="detail-film-meta">No films match the current decade filter.</span>'}
+        </div>
+      </div>
+    `;
+
+    detailPanel.classList.remove("no-animate");
+    detailPanel.classList.add("open");
+    detailPanel.querySelector("#detail-close")?.addEventListener("click", closeDetail);
   }
 
 
@@ -1154,13 +1629,19 @@ async function main(): Promise<void> {
       captionEl.style.opacity = "0";
       const heatmap = buildHeatmapLayer(currentMonth);
       const base = buildBaseLayer(currentUnit);
-      deck.setProps({ layers: heatmap ? [base, heatmap] : [base] });
+      const blockLayers: (GeoJsonLayer | ScatterplotLayer | HeatmapLayer<HeatmapDataPoint>)[] =
+        heatmap ? [base, heatmap] : [base];
+      if (showLocations && locationsData) {
+        blockLayers.push(buildLocationsLayer(locationsData.locations, currentDecade));
+      }
+      deck.setProps({ layers: blockLayers });
       debouncedUpdateHash();
       return;
     }
 
-    // Area mode — original behavior
-    const maxCount = computeMaxCount(computeFilteredCounts(currentUnit, activeCategories), currentMonth);
+    // Area mode — compute filtered counts once and reuse across layer builders and legend
+    const countsMap = computeFilteredCounts(currentUnit, activeCategories);
+    const maxCount = computeMaxCount(countsMap, currentMonth);
     legendMax.textContent = String(maxCount);
     if (captions) {
       const captionMap = currentUnit === "cd" ? captions.cd : captions.zip;
@@ -1170,11 +1651,15 @@ async function main(): Promise<void> {
     }
     // Refresh detail panel if open — full re-render so sparkline, rank,
     // and top months all stay in sync with the current month.
-    if (detailOpen && detailAreaKey && detailAreaLabel) {
-      openDetail(detailAreaKey, detailAreaLabel, [0, 0]);
+    if (detailOpen && detailAreaKey && detailAreaLabel && detailAreaFormalLabel) {
+      openDetail(detailAreaKey, detailAreaLabel, detailAreaFormalLabel, [0, 0]);
     }
 
-    deck.setProps({ layers: buildVisualizationLayers(currentMonth, currentUnit) });
+    const layers: (GeoJsonLayer | ScatterplotLayer)[] = buildVisualizationLayers(currentMonth, currentUnit, countsMap);
+    if (showLocations && locationsData) {
+      layers.push(buildLocationsLayer(locationsData.locations, currentDecade));
+    }
+    deck.setProps({ layers });
 
     debouncedUpdateHash();
   }
@@ -1251,33 +1736,63 @@ async function main(): Promise<void> {
     }
   });
 
-  // --- Keyboard shortcuts ---
-  document.addEventListener("keydown", (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      closeDetail();
-      return;
-    }
+  // --- Locations toggle (in toolbar landmarks row) ---
+  if (landmarksToggle && landmarksExpandable) {
+    landmarksToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showLocations = !showLocations;
+      landmarksToggle!.classList.toggle("toggle-active", showLocations);
+      landmarksToggle!.textContent = showLocations ? "On" : "Off";
+      landmarksToggle!.setAttribute("aria-pressed", String(showLocations));
+      landmarksExpandable!.classList.toggle("expanded", showLocations);
+      if (!showLocations) {
+        currentDecade = null;
+        updateDecadePillStates();
+      }
+      updateLayers();
+    });
+  }
 
+  // --- Slider arrow-key handler (scoped to timeline track for proper ARIA) ---
+  function handleSliderArrow(e: KeyboardEvent): void {
     if (e.key === "ArrowLeft") {
       if (currentMonthIdx > 0) {
         currentMonthIdx--;
         currentMonth = months[currentMonthIdx];
-        // updateLayers() calls updateActiveNotch() internally
         updateLayers();
       }
+      e.preventDefault();
     } else if (e.key === "ArrowRight") {
       if (currentMonthIdx < months.length - 1) {
         currentMonthIdx++;
         currentMonth = months[currentMonthIdx];
         updateLayers();
       }
+      e.preventDefault();
+    }
+  }
+  // Primary: scoped to the slider element for correct ARIA role="slider" semantics
+  timelineTrack.addEventListener("keydown", handleSliderArrow);
+
+  // --- Global keyboard shortcuts ---
+  document.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      closeDetail();
+      return;
+    }
+    // Convenience: global arrow keys when no input is focused
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      if (document.activeElement === timelineTrack) return; // already handled above
+      handleSliderArrow(e);
     }
   });
 }
 
 // --- Hero intro setup (runs synchronously before main) ---
 
-const heroSeen = sessionStorage.getItem("heroShown") === "1";
+// Wrap sessionStorage access in try-catch for restricted environments (sandboxed iframes)
+let heroSeen = false;
+try { heroSeen = sessionStorage.getItem("heroShown") === "1"; } catch { /* sandboxed */ }
 let heroDismissed = heroSeen;
 
 // Callback set by main() once the deck is ready, so early skips can trigger the pull-back.
@@ -1299,7 +1814,7 @@ if (!heroSeen) {
   function skipHero(): void {
     if (heroDismissed) return;
     heroDismissed = true;
-    sessionStorage.setItem("heroShown", "1");
+    try { sessionStorage.setItem("heroShown", "1"); } catch { /* sandboxed */ }
     hero.classList.add("hero-fade");
     setTimeout(() => hero.remove(), 800);
     hero.removeEventListener("click", skipHero);
