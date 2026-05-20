@@ -54,9 +54,14 @@ interface CountsOutput {
     generatedAt: string;
     totalShoots: number;
     dateRange: { min: string; max: string };
+    categories: string[];
   };
   byZip: Record<string, Record<string, number>>;
   byCommunityDistrict: Record<string, Record<string, number>>;
+  byCategory: {
+    byZip: Record<string, Record<string, Record<string, number>>>;
+    byCommunityDistrict: Record<string, Record<string, Record<string, number>>>;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -83,6 +88,18 @@ function splitMultiValueField(raw: string | undefined): string[] {
 function extractMonth(iso: string): string {
   return iso.slice(0, 7); // "2024-03-15T..." → "2024-03"
 }
+
+/**
+ * Normalize a category string. The raw SODA data occasionally has "WEB"
+ * instead of "Web"; this aligns it. Returns null for empty/missing values.
+ */
+function normalizeCategory(raw: string | undefined): string | null {
+  if (!raw || raw.trim() === "") return null;
+  const trimmed = raw.trim();
+  if (trimmed === "WEB") return "Web";
+  return trimmed;
+}
+
 
 /**
  * Build a community-district key like "Manhattan-5" from a borough name and a
@@ -184,6 +201,9 @@ async function fetchAllPermits(): Promise<SodaPermitRow[]> {
 interface AggregateResult {
   byZip: AreaMonthCounts;
   byCommunityDistrict: AreaMonthCounts;
+  byCategoryZip: Map<string, AreaMonthCounts>;
+  byCategoryCd: Map<string, AreaMonthCounts>;
+  categories: string[];
   totalShoots: number;
   minMonth: string;
   maxMonth: string;
@@ -192,6 +212,9 @@ interface AggregateResult {
 function aggregate(rows: SodaPermitRow[]): AggregateResult {
   const byZip: AreaMonthCounts = new Map();
   const byCD: AreaMonthCounts = new Map();
+  const byCategoryZip: Map<string, AreaMonthCounts> = new Map();
+  const byCategoryCd: Map<string, AreaMonthCounts> = new Map();
+  const categoriesFound: Set<string> = new Set();
   let totalShoots = 0;
   let minMonth = "9999-99";
   let maxMonth = "0000-00";
@@ -225,11 +248,43 @@ function aggregate(rows: SodaPermitRow[]): AggregateResult {
         }
       }
     }
+
+    // Category-aware counting — aggregate per-category per-area per-month.
+    const category = normalizeCategory(row.category);
+    if (category) {
+      categoriesFound.add(category);
+
+      // Per-category zip counts
+      for (const zip of zips) {
+        if (/^\d{5}$/.test(zip)) {
+          if (!byCategoryZip.has(category)) {
+            byCategoryZip.set(category, new Map());
+          }
+          incrementCount(byCategoryZip.get(category)!, zip, month);
+        }
+      }
+
+      // Per-category community district counts
+      if (borough) {
+        for (const board of boards) {
+          const cdId = buildCommunityDistrictId(borough, board);
+          if (cdId) {
+            if (!byCategoryCd.has(category)) {
+              byCategoryCd.set(category, new Map());
+            }
+            incrementCount(byCategoryCd.get(category)!, cdId, month);
+          }
+        }
+      }
+    }
   }
 
   return {
     byZip,
     byCommunityDistrict: byCD,
+    byCategoryZip,
+    byCategoryCd,
+    categories: [...categoriesFound].sort(),
     totalShoots,
     minMonth,
     maxMonth,
@@ -256,17 +311,33 @@ async function main(): Promise<void> {
   console.log(
     `  ✓ ${result.byCommunityDistrict.size} unique community districts.`,
   );
-  console.log(`  ✓ Date range: ${result.minMonth} → ${result.maxMonth}\n`);
+  console.log(`  ✓ Date range: ${result.minMonth} → ${result.maxMonth}`);
+  console.log(`  ✓ ${result.categories.length} categories: ${result.categories.join(", ")}\n`);
 
   // 3. Build output
+  // Serialize per-category maps: category → { areaId → { month → count } }
+  const byCategoryZipRecord: Record<string, Record<string, Record<string, number>>> = {};
+  for (const [cat, areaMap] of result.byCategoryZip) {
+    byCategoryZipRecord[cat] = mapOfMapsToRecord(areaMap);
+  }
+  const byCategoryCdRecord: Record<string, Record<string, Record<string, number>>> = {};
+  for (const [cat, areaMap] of result.byCategoryCd) {
+    byCategoryCdRecord[cat] = mapOfMapsToRecord(areaMap);
+  }
+
   const output: CountsOutput = {
     metadata: {
       generatedAt: new Date().toISOString(),
       totalShoots: result.totalShoots,
       dateRange: { min: result.minMonth, max: result.maxMonth },
+      categories: result.categories,
     },
     byZip: mapOfMapsToRecord(result.byZip),
     byCommunityDistrict: mapOfMapsToRecord(result.byCommunityDistrict),
+    byCategory: {
+      byZip: byCategoryZipRecord,
+      byCommunityDistrict: byCategoryCdRecord,
+    },
   };
 
   // 4. Write JSON

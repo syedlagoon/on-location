@@ -10,9 +10,14 @@ interface CountsData {
     generatedAt: string;
     totalShoots: number;
     dateRange: { min: string; max: string };
+    categories?: string[];
   };
   byZip: Record<string, Record<string, number>>;
   byCommunityDistrict: Record<string, Record<string, number>>;
+  byCategory?: {
+    byZip: Record<string, Record<string, Record<string, number>>>;
+    byCommunityDistrict: Record<string, Record<string, Record<string, number>>>;
+  };
 }
 
 interface CdProperties {
@@ -150,6 +155,7 @@ async function main(): Promise<void> {
   const months = generateMonths(min, max);
   let currentMonth = max;
   let currentUnit: UnitMode = "cd";
+  let activeCategories: Set<string> | null = null;
 
   // --- Build controls UI ---
   const controls = document.createElement("div");
@@ -195,7 +201,7 @@ async function main(): Promise<void> {
   legendMin.textContent = "0";
   const legendMax = document.createElement("span");
   legendMax.id = "legend-max";
-  const initialMax = computeMaxCount(countsForUnit(currentUnit), currentMonth);
+  const initialMax = computeMaxCount(computeFilteredCounts(currentUnit, activeCategories), currentMonth);
   legendMax.textContent = String(initialMax);
   legendLabels.append(legendMin, legendMax);
   const legendTitle = document.createElement("div");
@@ -210,6 +216,51 @@ async function main(): Promise<void> {
   attribution.innerHTML =
     `Data: <a href="https://data.cityofnewyork.us/City-Government/Film-Permits/tg4x-b46p" target="_blank" rel="noopener">NYC Open Data Film Permits</a>`;
   document.body.appendChild(attribution);
+
+  // --- Category filter ---
+  const filterBar = document.createElement("div");
+  filterBar.id = "category-filter";
+
+  if (counts.metadata.categories && counts.metadata.categories.length > 0) {
+    const allBtn = document.createElement("button");
+    allBtn.textContent = "All";
+    allBtn.classList.add("cat-pill", "cat-active");
+    allBtn.addEventListener("click", () => {
+      activeCategories = null;
+      filterBar.querySelectorAll(".cat-pill").forEach((el) => el.classList.remove("cat-active"));
+      allBtn.classList.add("cat-active");
+      updateLayers();
+    });
+    filterBar.appendChild(allBtn);
+
+    for (const cat of counts.metadata.categories) {
+      const pill = document.createElement("button");
+      pill.textContent = cat;
+      pill.classList.add("cat-pill");
+      pill.addEventListener("click", () => {
+        if (activeCategories === null) {
+          activeCategories = new Set([cat]);
+        } else if (activeCategories.has(cat)) {
+          activeCategories.delete(cat);
+          if (activeCategories.size === 0) activeCategories = null;
+        } else {
+          activeCategories.add(cat);
+        }
+        // Update pill active states
+        filterBar.querySelectorAll(".cat-pill").forEach((el) => {
+          const text = el.textContent;
+          if (text === "All") {
+            el.classList.toggle("cat-active", activeCategories === null);
+          } else {
+            el.classList.toggle("cat-active", activeCategories !== null && activeCategories.has(text!));
+          }
+        });
+        updateLayers();
+      });
+      filterBar.appendChild(pill);
+    }
+    document.body.appendChild(filterBar);
+  }
 
   // --- Resolve the counts key and display label for a feature ---
   function resolveFeature(
@@ -229,13 +280,33 @@ async function main(): Promise<void> {
     return { countsKey: zip, label: `Zip ${zip}` };
   }
 
-  function countsForUnit(unit: UnitMode): Record<string, Record<string, number>> {
-    return unit === "cd" ? counts.byCommunityDistrict : counts.byZip;
+  function computeFilteredCounts(
+    unit: UnitMode,
+    categories: Set<string> | null,
+  ): Record<string, Record<string, number>> {
+    if (categories === null || !counts.byCategory) {
+      return unit === "cd" ? counts.byCommunityDistrict : counts.byZip;
+    }
+    const source = unit === "cd"
+      ? counts.byCategory.byCommunityDistrict
+      : counts.byCategory.byZip;
+    const result: Record<string, Record<string, number>> = {};
+    for (const cat of categories) {
+      const catData = source[cat];
+      if (!catData) continue;
+      for (const [areaId, monthCounts] of Object.entries(catData)) {
+        if (!result[areaId]) result[areaId] = {};
+        for (const [month, count] of Object.entries(monthCounts)) {
+          result[areaId][month] = (result[areaId][month] ?? 0) + count;
+        }
+      }
+    }
+    return result;
   }
 
   // --- Layer builder ---
   function buildLayer(month: string, unit: UnitMode): GeoJsonLayer {
-    const countsMap = countsForUnit(unit);
+    const countsMap = computeFilteredCounts(unit, activeCategories);
     const maxCount = computeMaxCount(countsMap, month);
     const data = unit === "cd" ? cdBoundaries : zipBoundaries;
 
@@ -288,7 +359,7 @@ async function main(): Promise<void> {
       const resolved = resolveFeature(object, currentUnit);
       if (!resolved) return null;
 
-      const countsMap = countsForUnit(currentUnit);
+      const countsMap = computeFilteredCounts(currentUnit, activeCategories);
       const count = countsMap[resolved.countsKey]?.[currentMonth] ?? 0;
 
       return {
@@ -302,7 +373,7 @@ async function main(): Promise<void> {
   // --- Update layers ---
   function updateLayers(): void {
     monthLabel.textContent = formatMonth(currentMonth);
-    const maxCount = computeMaxCount(countsForUnit(currentUnit), currentMonth);
+    const maxCount = computeMaxCount(computeFilteredCounts(currentUnit, activeCategories), currentMonth);
     legendMax.textContent = String(maxCount);
     deck.setProps({ layers: [buildLayer(currentMonth, currentUnit)] });
   }
