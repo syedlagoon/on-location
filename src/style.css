@@ -286,10 +286,17 @@ body {
   background: var(--color-accent);
   box-shadow: 0 0 10px rgba(255, 200, 60, 0.45),
               0 0 2px rgba(255, 200, 60, 0.8);
+  animation: notchPulse 2s ease-in-out infinite;
 }
 
 .notch-active:hover {
   background: var(--color-accent-hover);
+  animation: none;
+}
+
+@keyframes notchPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 200, 60, 0.45), 0 0 2px rgba(255, 200, 60, 0.8); }
+  50% { box-shadow: 0 0 16px rgba(255, 200, 60, 0.6), 0 0 4px rgba(255, 200, 60, 0.9); }
 }
 
 #timeline-track:focus-visible {
@@ -797,6 +804,35 @@ body {
 .notch:hover .notch-tooltip {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+
+/* --- Trend indicators --- */
+
+.trend-up { color: #4ade80; }
+.trend-down { color: #f87171; }
+.trend-flat { color: var(--color-fg-muted); }
+
+/* --- Detail panel sparkline refinement --- */
+
+.detail-sparkline {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+}
+
+
+/* --- Fade-in utility for staggered UI reveals --- */
+
+.ui-fade-in {
+  animation: uiFadeIn 600ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+@keyframes uiFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 
 

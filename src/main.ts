@@ -678,7 +678,7 @@ async function main(): Promise<void> {
       }
 
       return {
-        html: `<strong>${label}</strong><br/>Shoots in ${formatMonth(currentMonth)}: ${count}`,
+        html: `<strong>${label}</strong><br/><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">${count}</span> shoots &middot; ${formatMonth(currentMonth)}`,
         style: tooltipStyle,
       };
     },
@@ -715,6 +715,15 @@ async function main(): Promise<void> {
 
   // (timeline notches already built above)
 
+  // --- Stagger UI elements in after hero dismisses ---
+  function revealUI(): void {
+    const elements = [titleOverlay, captionEl, legend, filterBar, toolbar, timeline, attribution];
+    elements.forEach((el, i) => {
+      el.classList.add("ui-fade-in");
+      el.style.animationDelay = `${200 + i * 80}ms`;
+    });
+  }
+
   // --- Hero dismiss (cinematic pull-back) ---
   function dismissHero(): void {
     if (heroDismissed) return;
@@ -728,7 +737,9 @@ async function main(): Promise<void> {
         transitionDuration: 2000,
       },
     });
-    setTimeout(() => hero.remove(), 800);
+    // Stagger in UI elements
+    revealUI();
+    setTimeout(() => hero.remove(), 1200);
   }
 
   if (!heroSeen) {
@@ -775,14 +786,15 @@ async function main(): Promise<void> {
     // Month-over-month trend
     const monthIdx = months.indexOf(currentMonth);
     const prevCount = monthIdx > 0 ? (areaCounts[months[monthIdx - 1]] ?? 0) : 0;
-    const trend = currentCount > prevCount ? "\u2191" : currentCount < prevCount ? "\u2193" : "\u2192";
+    const trendChar = currentCount > prevCount ? "\u2191" : currentCount < prevCount ? "\u2193" : "\u2192";
+    const trendClass = currentCount > prevCount ? "trend-up" : currentCount < prevCount ? "trend-down" : "trend-flat";
 
     // Sparkline for this area across all months
     const areaTotals = months.map((m) => areaCounts[m] ?? 0);
     const areaMax = Math.max(...areaTotals, 1);
-    const sparkW = 260;
-    const sparkH = 50;
-    const sparkPad = 2;
+    const sparkW = 280;
+    const sparkH = 56;
+    const sparkPad = 4;
     const stepX = (sparkW - sparkPad * 2) / Math.max(months.length - 1, 1);
     const pts = areaTotals.map((t, i) => ({
       x: sparkPad + i * stepX,
@@ -799,19 +811,27 @@ async function main(): Promise<void> {
       <h2>${label}</h2>
       <div class="detail-stat">
         <span class="detail-big">${currentCount}</span>
-        <span class="detail-label">shoots in ${formatMonth(currentMonth)} ${trend}</span>
+        <span class="detail-label">shoots in ${formatMonth(currentMonth)} <span class="${trendClass}">${trendChar}</span></span>
       </div>
       <div class="detail-stat">
         <span class="detail-rank">#${rank}</span>
-        <span class="detail-label">of ${totalAreas} areas</span>
+        <span class="detail-label">of ${totalAreas} areas this month</span>
       </div>
       <div class="detail-section">
         <h3>Activity over time</h3>
-        <svg width="${sparkW}" height="${sparkH}" viewBox="0 0 ${sparkW} ${sparkH}">
-          <path d="${areaPath}" fill="#ffc83c" opacity="0.15"/>
-          <path d="${linePath}" fill="none" stroke="#ffc83c" stroke-width="1.5"/>
-          <circle cx="${cx}" cy="${cy}" r="3.5" fill="#ffc83c"/>
-        </svg>
+        <div class="detail-sparkline">
+          <svg width="${sparkW}" height="${sparkH}" viewBox="0 0 ${sparkW} ${sparkH}">
+            <defs>
+              <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffc83c" stop-opacity="0.2"/>
+                <stop offset="100%" stop-color="#ffc83c" stop-opacity="0.02"/>
+              </linearGradient>
+            </defs>
+            <path d="${areaPath}" fill="url(#spark-fill)"/>
+            <path d="${linePath}" fill="none" stroke="#ffc83c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="${cx}" cy="${cy}" r="4" fill="#0a0a0a" stroke="#ffc83c" stroke-width="2"/>
+          </svg>
+        </div>
       </div>
       <div class="detail-section">
         <h3>Top months</h3>
@@ -865,10 +885,11 @@ async function main(): Promise<void> {
       const labelEl = detailPanel.querySelector(".detail-stat .detail-label");
       if (bigEl) bigEl.textContent = String(count);
       if (labelEl) {
-        const monthIdx = months.indexOf(currentMonth);
-        const prevCount = monthIdx > 0 ? (areaCounts[months[monthIdx - 1]] ?? 0) : 0;
-        const trend = count > prevCount ? "\u2191" : count < prevCount ? "\u2193" : "\u2192";
-        labelEl.textContent = `shoots in ${formatMonth(currentMonth)} ${trend}`;
+        const mi = months.indexOf(currentMonth);
+        const pc = mi > 0 ? (areaCounts[months[mi - 1]] ?? 0) : 0;
+        const tChar = count > pc ? "\u2191" : count < pc ? "\u2193" : "\u2192";
+        const tCls = count > pc ? "trend-up" : count < pc ? "trend-down" : "trend-flat";
+        labelEl.innerHTML = `shoots in ${formatMonth(currentMonth)} <span class="${tCls}">${tChar}</span>`;
       }
     }
 
