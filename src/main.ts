@@ -316,13 +316,18 @@ const BASE = import.meta.env.BASE_URL;
 
 async function main(): Promise<void> {
   const [counts, cdBoundaries, zipBoundaries, captions, locationsData] = await Promise.all([
-    fetch(`${BASE}data/counts.json`).then((r) => r.json() as Promise<CountsData>),
-    fetch(`${BASE}data/cd-boundaries.geojson`).then(
-      (r) => r.json() as Promise<FeatureCollection<Geometry, CdProperties>>,
-    ),
-    fetch(`${BASE}data/zip-boundaries.geojson`).then(
-      (r) => r.json() as Promise<FeatureCollection<Geometry, ZipProperties>>,
-    ),
+    fetch(`${BASE}data/counts.json`).then((r) => {
+      if (!r.ok) throw new Error(`Failed to load counts.json (${r.status})`);
+      return r.json() as Promise<CountsData>;
+    }),
+    fetch(`${BASE}data/cd-boundaries.geojson`).then((r) => {
+      if (!r.ok) throw new Error(`Failed to load cd-boundaries.geojson (${r.status})`);
+      return r.json() as Promise<FeatureCollection<Geometry, CdProperties>>;
+    }),
+    fetch(`${BASE}data/zip-boundaries.geojson`).then((r) => {
+      if (!r.ok) throw new Error(`Failed to load zip-boundaries.geojson (${r.status})`);
+      return r.json() as Promise<FeatureCollection<Geometry, ZipProperties>>;
+    }),
     fetch(`${BASE}data/captions.json`)
       .then((r) => r.ok ? r.json() as Promise<CaptionsData> : null)
       .catch(() => null),
@@ -510,6 +515,7 @@ async function main(): Promise<void> {
     info.append(h, d);
 
     const toggle = document.createElement("button");
+    toggle.type = "button";
     toggle.className = "toolbar-toggle";
     toggle.textContent = initialLabel;
     toggle.setAttribute("aria-label", ariaLabel);
@@ -560,23 +566,30 @@ async function main(): Promise<void> {
   typeDesc.textContent = "Filter by permit category";
   typeInfo.append(typeHeading, typeDesc);
   const typeChevron = document.createElement("button");
+  typeChevron.type = "button";
   typeChevron.className = "toolbar-toggle toolbar-toggle-chevron";
   typeChevron.textContent = "All";
   typeChevron.setAttribute("aria-label", "Toggle category filter");
   typeRow.append(typeInfo, typeChevron);
   const typeExpandable = document.createElement("div");
   typeExpandable.className = "toolbar-expandable";
+  typeExpandable.id = "type-expandable";
   const typeInner = document.createElement("div");
   typeInner.className = "toolbar-expandable-inner";
   typeExpandable.appendChild(typeInner);
+
+  // ARIA: link the chevron button to the expandable panel it controls
+  typeChevron.setAttribute("aria-expanded", "false");
+  typeChevron.setAttribute("aria-controls", "type-expandable");
 
   typeRow.addEventListener("click", (ev) => {
     if (ev.target !== typeChevron) typeChevron.click();
   });
   typeChevron.addEventListener("click", (e) => {
     e.stopPropagation();
-    typeExpandable.classList.toggle("expanded");
+    const isExpanded = typeExpandable.classList.toggle("expanded");
     typeChevron.classList.toggle("chevron-up");
+    typeChevron.setAttribute("aria-expanded", String(isExpanded));
   });
 
   // --- Landmarks accordion (toggle + decade pills inside toolbar) ---
@@ -609,6 +622,7 @@ async function main(): Promise<void> {
     lmInfo.append(lmHeading, lmDesc);
 
     landmarksToggle = document.createElement("button");
+    landmarksToggle.type = "button";
     landmarksToggle.className = "toolbar-toggle";
     landmarksToggle.textContent = showLocations ? "On" : "Off";
     landmarksToggle.setAttribute("aria-label", "Toggle filming landmarks");
@@ -622,8 +636,13 @@ async function main(): Promise<void> {
 
     landmarksExpandable = document.createElement("div");
     landmarksExpandable.className = "toolbar-expandable";
+    landmarksExpandable.id = "landmarks-expandable";
     if (showLocations) landmarksExpandable.classList.add("expanded");
     landmarksExpandable.appendChild(decadePillsContainer);
+
+    // ARIA: link the landmarks toggle to the expandable panel it controls
+    landmarksToggle.setAttribute("aria-expanded", String(showLocations));
+    landmarksToggle.setAttribute("aria-controls", "landmarks-expandable");
   }
 
   // Assemble toolbar
@@ -636,6 +655,7 @@ async function main(): Promise<void> {
   function buildDecadePills(): void {
     decadePillsContainer.innerHTML = "";
     const allPill = document.createElement("button");
+    allPill.type = "button";
     allPill.textContent = "All";
     allPill.classList.add("decade-pill");
     if (currentDecade === null) allPill.classList.add("decade-active");
@@ -648,6 +668,7 @@ async function main(): Promise<void> {
 
     for (const d of availableDecades) {
       const pill = document.createElement("button");
+      pill.type = "button";
       pill.textContent = `${d}s`;
       pill.classList.add("decade-pill");
       pill.setAttribute("data-decade", String(d));
@@ -685,6 +706,8 @@ async function main(): Promise<void> {
   const timelineLabel = document.createElement("div");
   timelineLabel.id = "timeline-label";
   timelineLabel.textContent = formatMonth(currentMonth);
+  timelineLabel.setAttribute("aria-live", "polite");
+  timelineLabel.setAttribute("aria-atomic", "true");
 
   const timelineTrack = document.createElement("div");
   timelineTrack.id = "timeline-track";
@@ -844,6 +867,7 @@ async function main(): Promise<void> {
 
   if (counts.metadata.categories && counts.metadata.categories.length > 0) {
     const allBtn = document.createElement("button");
+    allBtn.type = "button";
     allBtn.textContent = "All";
     allBtn.classList.add("cat-pill", "cat-active");
     allBtn.addEventListener("click", () => {
@@ -858,6 +882,7 @@ async function main(): Promise<void> {
 
     for (const cat of counts.metadata.categories) {
       const pill = document.createElement("button");
+      pill.type = "button";
       pill.textContent = cat;
       pill.classList.add("cat-pill");
       pill.setAttribute("data-cat", cat);
@@ -891,6 +916,8 @@ async function main(): Promise<void> {
   // --- Detail panel ---
   const detailPanel = document.createElement("div");
   detailPanel.id = "detail-panel";
+  detailPanel.setAttribute("role", "complementary");
+  detailPanel.setAttribute("aria-label", "Area detail panel");
   document.body.appendChild(detailPanel);
   let detailOpen = false;
   let detailAreaKey: string | null = null;
@@ -1183,21 +1210,8 @@ async function main(): Promise<void> {
     typeExpandable.style.display = visible ? "" : "none";
   }
 
-  // deck.gl tooltip uses inline styles (no CSS class support), so these values
-  // mirror the CSS design tokens. Update in tandem with :root tokens in style.css.
-  const tooltipStyle = {
-    fontFamily: "'Inter', system-ui, sans-serif",      // --font-body
-    fontSize: "12px",                                   // --text-caption
-    padding: "8px 12px",                                // --space-sm --space-md
-    background: "rgba(15, 15, 25, 0.95)",               // ~--color-surface-solid
-    color: "#f0f0f0",                                   // --color-fg
-    borderRadius: "8px",                                // --radius-md
-    lineHeight: "1.5",
-    maxWidth: "240px",
-    border: "1px solid rgba(255, 255, 255, 0.1)",       // ~--color-border
-    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",        // ~--shadow-panel
-    backdropFilter: "blur(12px)",                       // ~--blur-tooltip (14px)
-  };
+  // Tooltip styling is handled by the `.deck-tooltip` CSS class in style.css.
+  // deck.gl applies this class automatically to tooltip elements.
 
   // --- Deck instance ---
   // Allow pan and zoom but constrain to NYC area so the map can't be dragged off-screen.
@@ -1282,8 +1296,7 @@ async function main(): Promise<void> {
         const filmCount = loc.films.length;
         const filmWord = filmCount === 1 ? "film" : "films";
         return {
-          html: `<strong>${escapeHtml(loc.name)}</strong><br/><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">${filmCount}</span> ${filmWord}`,
-          style: tooltipStyle,
+          html: `<strong>${escapeHtml(loc.name)}</strong><br/><span class="tooltip-count">${filmCount}</span> ${filmWord}`,
         };
       }
 
@@ -1305,8 +1318,7 @@ async function main(): Promise<void> {
       }
 
       return {
-        html: `<strong>${label}</strong><br/><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">${count}</span> shoots &middot; ${formatMonth(currentMonth)}`,
-        style: tooltipStyle,
+        html: `<strong>${label}</strong><br/><span class="tooltip-count">${count}</span> shoots &middot; ${formatMonth(currentMonth)}`,
       };
     },
     onClick: ({ object }: { object?: AreaFeature | CircleDataPoint | CuratedLocation }) => {
@@ -1497,7 +1509,7 @@ async function main(): Promise<void> {
       ? `<span class="detail-formal-label">${escapeHtml(formalLabel)}</span>` : "";
 
     detailPanel.innerHTML = `
-      <button id="detail-close" aria-label="Close detail panel">\u2715</button>
+      <button type="button" id="detail-close" aria-label="Close detail panel">\u2715</button>
       <h2>${escapeHtml(label)}</h2>
       ${formalSubtitle}
       <div class="detail-stat">
@@ -1600,7 +1612,7 @@ async function main(): Promise<void> {
     }).join("");
 
     detailPanel.innerHTML = `
-      <button id="detail-close" aria-label="Close detail panel">\u2715</button>
+      <button type="button" id="detail-close" aria-label="Close detail panel">\u2715</button>
       <h2>${escapeHtml(location.name)}</h2>
       <div class="detail-stat">
         <span class="detail-big">${films.length}</span>
@@ -1744,6 +1756,7 @@ async function main(): Promise<void> {
       landmarksToggle!.classList.toggle("toggle-active", showLocations);
       landmarksToggle!.textContent = showLocations ? "On" : "Off";
       landmarksToggle!.setAttribute("aria-pressed", String(showLocations));
+      landmarksToggle!.setAttribute("aria-expanded", String(showLocations));
       landmarksExpandable!.classList.toggle("expanded", showLocations);
       if (!showLocations) {
         currentDecade = null;
