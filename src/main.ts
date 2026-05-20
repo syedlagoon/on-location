@@ -200,16 +200,18 @@ function computeCentroid(geometry: Polygon | MultiPolygon): [number, number] {
 
 // --- Main ---
 
+const BASE = import.meta.env.BASE_URL;
+
 async function main(): Promise<void> {
   const [counts, cdBoundaries, zipBoundaries, captions] = await Promise.all([
-    fetch("/data/counts.json").then((r) => r.json() as Promise<CountsData>),
-    fetch("/data/cd-boundaries.geojson").then(
+    fetch(`${BASE}data/counts.json`).then((r) => r.json() as Promise<CountsData>),
+    fetch(`${BASE}data/cd-boundaries.geojson`).then(
       (r) => r.json() as Promise<FeatureCollection<Geometry, CdProperties>>,
     ),
-    fetch("/data/zip-boundaries.geojson").then(
+    fetch(`${BASE}data/zip-boundaries.geojson`).then(
       (r) => r.json() as Promise<FeatureCollection<Geometry, ZipProperties>>,
     ),
-    fetch("/data/captions.json")
+    fetch(`${BASE}data/captions.json`)
       .then((r) => r.ok ? r.json() as Promise<CaptionsData> : null)
       .catch(() => null),
   ]);
@@ -568,7 +570,7 @@ async function main(): Promise<void> {
     if (blocksLoading) return false;
     blocksLoading = true;
     try {
-      const res = await fetch("/data/blocks.json");
+      const res = await fetch(`${BASE}data/blocks.json`);
       if (!res.ok) {
         console.warn(`blocks.json not found (${res.status}). Run "npm run blocks" to generate it.`);
         blocksLoading = false;
