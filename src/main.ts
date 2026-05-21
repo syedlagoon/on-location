@@ -3,6 +3,7 @@ import { Deck } from "@deck.gl/core";
 import type { MapViewState } from "@deck.gl/core";
 import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { HeatmapLayer } from "@deck.gl/aggregation-layers";
+import { createEffectsSystem } from "./effects";
 import type { Feature, FeatureCollection, Geometry, Position, Polygon, MultiPolygon } from "geojson";
 
 // --- Types ---
@@ -103,6 +104,28 @@ interface LocationsData {
     enrichedFilms?: number;
   };
   locations: CuratedLocation[];
+}
+
+interface DiaryMatch {
+  filmTitle: string;
+  filmYear: number | null;
+  rating: number | null;
+  watchedDate: string | null;
+  letterboxdUrl: string;
+  locationIds: string[];
+}
+
+interface DiaryData {
+  metadata: { user: string; matchedFilms: number; matchedLocations: number };
+  matches: DiaryMatch[];
+}
+
+interface DiaryPinData {
+  position: [number, number];
+  locationId: string;
+  name: string;
+  filmLabel: string;
+  location: CuratedLocation;
 }
 
 
@@ -273,6 +296,20 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+/** Convert a 0.5–5.0 rating to Unicode stars: full ★ for whole, ½ for remainder. */
+function renderStars(rating: number): string {
+  const full = Math.floor(rating);
+  const hasHalf = rating - full >= 0.5;
+  return "\u2605".repeat(full) + (hasHalf ? "\u00BD" : "");
+}
+
+/** Format "YYYY-MM-DD" → "Mar 15, 2024" style label. */
+function formatDate(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
@@ -315,7 +352,7 @@ function computeCentroid(geometry: Polygon | MultiPolygon): [number, number] {
 const BASE = import.meta.env.BASE_URL;
 
 async function main(): Promise<void> {
-  const [counts, cdBoundaries, zipBoundaries, captions, locationsData] = await Promise.all([
+  const [counts, cdBoundaries, zipBoundaries, captions, locationsData, diaryData] = await Promise.all([
     fetch(`${BASE}data/counts.json`).then((r) => {
       if (!r.ok) throw new Error(`Failed to load counts.json (${r.status})`);
       return r.json() as Promise<CountsData>;
@@ -334,12 +371,35 @@ async function main(): Promise<void> {
     fetch(`${BASE}data/locations.json`)
       .then((r) => r.ok ? r.json() as Promise<LocationsData> : null)
       .catch(() => null),
+    fetch(`${BASE}data/diary.json`)
+      .then((r) => r.ok ? r.json() as Promise<DiaryData> : null)
+      .catch(() => null),
   ]);
+
+  // --- Diary lookup maps ---
+  // Map locationId -> DiaryMatch[] for O(1) access when rendering location details.
+  // Set of matched locationIds for fast pin highlighting.
+  const diaryByLocation = new Map<string, DiaryMatch[]>();
+  const matchedLocationIds = new Set<string>();
+  // Map normalized film title -> DiaryMatch for inline badges in area detail panels.
+  const diaryByTitle = new Map<string, DiaryMatch>();
+
+  if (diaryData && diaryData.matches.length > 0) {
+    for (const match of diaryData.matches) {
+      for (const locId of match.locationIds) {
+        matchedLocationIds.add(locId);
+        if (!diaryByLocation.has(locId)) diaryByLocation.set(locId, []);
+        diaryByLocation.get(locId)!.push(match);
+      }
+      // Key by normalized title+year for area detail matching
+      const normKey = `${match.filmTitle.toLowerCase().trim()}::${match.filmYear ?? "?"}`;
+      if (!diaryByTitle.has(normKey)) diaryByTitle.set(normKey, match);
+    }
+  }
 
   const { min, max } = counts.metadata.dateRange;
   const months = generateMonths(min, max);
   let blocksData: BlocksData | null = null;
-  let blocksLoading = false;
 
   // --- Permalink: hash-based URL state ---
   // We use hash params (e.g. #month=2025-06&unit=cd&viz=bars&grain=area&cats=Television,Film)
@@ -449,6 +509,7 @@ async function main(): Promise<void> {
   let currentMonthIdx = hashState.monthIdx;
   let showLocations = hashState.showLocations;
   let currentDecade: number | null = hashState.decade;
+  let diaryMode = false;
 
   /** Serialize current state to the URL hash via replaceState (no history entry). */
   function updateHash(): void {
@@ -546,13 +607,6 @@ async function main(): Promise<void> {
     "Toggle visualization shape",
   );
 
-  const { row: grainRow, toggle: grainToggle } = createToolbarRow(
-    "Detail",
-    "Area polygons or block heatmap",
-    currentGrain === "area" ? "Area" : "Block",
-    "Toggle block-level heatmap",
-  );
-
   // --- Type accordion (category filter inside toolbar) ---
   const typeRow = document.createElement("div");
   typeRow.className = "toolbar-row";
@@ -645,8 +699,26 @@ async function main(): Promise<void> {
     landmarksToggle.setAttribute("aria-controls", "landmarks-expandable");
   }
 
+  // --- Diary toggle row (only shown when diary has matches) ---
+  let diaryRow: HTMLDivElement | null = null;
+  let diaryToggle: HTMLButtonElement | null = null;
+  const hasDiaryData = diaryData !== null && diaryData.matches.length > 0;
+
+  if (hasDiaryData) {
+    const result = createToolbarRow(
+      "Diary",
+      "Films you\u2019ve watched",
+      "Off",
+      "Toggle diary mode",
+    );
+    diaryRow = result.row;
+    diaryToggle = result.toggle;
+    diaryRow.classList.add("toolbar-row-diary");
+  }
+
   // Assemble toolbar
-  toolbar.append(unitRow, vizRow, grainRow, typeRow, typeExpandable);
+  if (diaryRow) toolbar.append(diaryRow);
+  toolbar.append(unitRow, vizRow, typeRow, typeExpandable);
   if (landmarksRow && landmarksExpandable) {
     toolbar.append(landmarksRow, landmarksExpandable);
   }
@@ -661,6 +733,7 @@ async function main(): Promise<void> {
     if (currentDecade === null) allPill.classList.add("decade-active");
     allPill.addEventListener("click", () => {
       currentDecade = null;
+      effectsSystem.setDecadeGrade(null);
       updateDecadePillStates();
       updateLayers();
     });
@@ -675,6 +748,7 @@ async function main(): Promise<void> {
       if (currentDecade === d) pill.classList.add("decade-active");
       pill.addEventListener("click", () => {
         currentDecade = currentDecade === d ? null : d;
+        effectsSystem.setDecadeGrade(currentDecade);
         updateDecadePillStates();
         updateLayers();
       });
@@ -817,8 +891,11 @@ async function main(): Promise<void> {
   // --- Title overlay ---
   const titleOverlay = document.createElement("div");
   titleOverlay.id = "title-overlay";
+  const diaryCountHtml = diaryData && diaryData.matches.length > 0
+    ? `<div class="diary-count">\uD83C\uDFAC ${diaryData.matches.length} ${diaryData.matches.length === 1 ? "film" : "films"} you've watched ${diaryData.matches.length === 1 ? "was" : "were"} shot in NYC</div>`
+    : "";
   titleOverlay.innerHTML =
-    `<h1>On Location</h1><span class="title-accent"></span><p>NYC film &amp; TV permit activity, month by month</p>`;
+    `<h1>On Location</h1><span class="title-accent"></span><p>New York City&#x27;s filming landscape, mapped</p>${diaryCountHtml}`;
   document.body.appendChild(titleOverlay);
 
   // --- Caption ---
@@ -854,6 +931,28 @@ async function main(): Promise<void> {
   attribution.innerHTML =
     `Data: <a href="https://data.cityofnewyork.us/City-Government/Film-Permits/tg4x-b46p" target="_blank" rel="noopener">NYC Open Data Film Permits</a>`;
   document.body.appendChild(attribution);
+
+  // --- Diary stats card (replaces timeline when diary mode is active) ---
+  const diaryStatsCard = document.createElement("div");
+  diaryStatsCard.id = "diary-stats-card";
+  diaryStatsCard.setAttribute("role", "region");
+  diaryStatsCard.setAttribute("aria-label", "Your NYC film diary");
+
+  if (hasDiaryData && diaryData) {
+    const sortedMatches = [...diaryData.matches].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    const totalLocations = matchedLocationIds.size;
+    const filmListHtml = sortedMatches.map((m) => {
+      const starsHtml = m.rating !== null ? renderStars(m.rating) : "";
+      const yearHtml = m.filmYear !== null ? ` <span class="diary-stats-year">(${m.filmYear})</span>` : "";
+      return `<div class="diary-stats-film" data-film-title="${escapeHtml(m.filmTitle)}">${starsHtml ? `<span class="diary-stats-stars">${starsHtml}</span>` : ""}<span class="diary-stats-title">${escapeHtml(m.filmTitle)}${yearHtml}</span></div>`;
+    }).join("");
+    diaryStatsCard.innerHTML = `
+      <div class="diary-stats-header">YOUR NYC FILM MAP</div>
+      <div class="diary-stats-summary">${sortedMatches.length} films \u00B7 ${totalLocations} locations</div>
+      <div class="diary-stats-list">${filmListHtml}</div>
+    `;
+  }
+  document.body.appendChild(diaryStatsCard);
 
   // --- Category filter pills (inside toolbar "Type" expandable) ---
   /** Update the type chevron label to reflect current selection. */
@@ -922,6 +1021,70 @@ async function main(): Promise<void> {
   let detailOpen = false;
   let detailAreaKey: string | null = null;
   let detailAreaLabel: string | null = null;
+
+  // --- Spring physics for detail panel ---
+  // Damped spring solver replaces CSS transition for a natural, alive feel.
+  // The spring drives --panel-offset (0 = fully open, 100 = fully closed).
+  // CSS maps this to translateX (desktop) or translateY (mobile).
+
+  interface SpringState {
+    value: number;
+    velocity: number;
+    target: number;
+  }
+
+  const panelSpring: SpringState = { value: 100, velocity: 0, target: 100 };
+  let panelRaf: number | null = null;
+
+  // Stiffness controls snap speed; damping controls overshoot.
+  // These values give a quick snap with ~10% overshoot — perceptible but not sloppy.
+  const SPRING_STIFFNESS = 180;
+  const SPRING_DAMPING = 22;
+
+  function stepSpring(s: SpringState, dt: number): boolean {
+    const displacement = s.value - s.target;
+    const springForce = -SPRING_STIFFNESS * displacement;
+    const dampingForce = -SPRING_DAMPING * s.velocity;
+    s.velocity += (springForce + dampingForce) * dt;
+    s.value += s.velocity * dt;
+
+    // Settle when both position and velocity are negligible
+    if (Math.abs(displacement) < 0.1 && Math.abs(s.velocity) < 0.5) {
+      s.value = s.target;
+      s.velocity = 0;
+      return false; // settled
+    }
+    return true; // still animating
+  }
+
+  function animatePanel(): void {
+    const animating = stepSpring(panelSpring, 1 / 60);
+    detailPanel.style.setProperty("--panel-offset", String(panelSpring.value));
+
+    if (animating) {
+      panelRaf = requestAnimationFrame(animatePanel);
+    } else {
+      panelRaf = null;
+      // When fully closed, clean up DOM state
+      if (panelSpring.value >= 99) {
+        detailPanel.classList.remove("open", "no-animate");
+      }
+    }
+  }
+
+  function openPanelSpring(): void {
+    panelSpring.target = 0;
+    if (panelRaf === null) {
+      panelRaf = requestAnimationFrame(animatePanel);
+    }
+  }
+
+  function closePanelSpring(): void {
+    panelSpring.target = 100;
+    if (panelRaf === null) {
+      panelRaf = requestAnimationFrame(animatePanel);
+    }
+  }
 
   // --- Resolve the counts key and display label for a feature ---
   function resolveFeature(
@@ -1155,6 +1318,7 @@ async function main(): Promise<void> {
 
   function buildLocationsLayer(locations: CuratedLocation[], decade: number | null): ScatterplotLayer {
     const filtered = filterLocationsByDecade(locations, decade);
+    const hasDiaryMatches = matchedLocationIds.size > 0;
     return new ScatterplotLayer({
       id: "locations-layer",
       data: filtered,
@@ -1163,51 +1327,75 @@ async function main(): Promise<void> {
       stroked: true,
       filled: true,
       getPosition: (d: CuratedLocation) => [d.lng, d.lat],
-      getRadius: 6,
+      getRadius: (d: CuratedLocation) =>
+        hasDiaryMatches && matchedLocationIds.has(d.locationId) ? 7 : 6,
       radiusMinPixels: 5,
-      radiusMaxPixels: 10,
+      radiusMaxPixels: (hasDiaryMatches ? 12 : 10),
       radiusUnits: "pixels" as const,
-      getFillColor: [255, 200, 60, 220],
-      getLineColor: [255, 255, 255, 200],
-      lineWidthMinPixels: 1.5,
+      getFillColor: (d: CuratedLocation): [number, number, number, number] =>
+        hasDiaryMatches && matchedLocationIds.has(d.locationId)
+          ? [0, 224, 84, 240]     // Letterboxd green
+          : [255, 200, 60, 220],  // regular amber
+      getLineColor: (d: CuratedLocation): [number, number, number, number] =>
+        hasDiaryMatches && matchedLocationIds.has(d.locationId)
+          ? [255, 255, 255, 240]
+          : [255, 255, 255, 200],
+      lineWidthMinPixels: (hasDiaryMatches ? 2 : 1.5),
       updateTriggers: {
         getPosition: [decade],
+        getFillColor: [hasDiaryMatches],
+        getRadius: [hasDiaryMatches],
       },
     });
   }
 
-  /** Lazy-load blocks.json. Returns true if data is (now) available. */
-  async function ensureBlocksData(): Promise<boolean> {
-    if (blocksData) return true;
-    if (blocksLoading) return false;
-    blocksLoading = true;
-    try {
-      const res = await fetch(`${BASE}data/blocks.json`);
-      if (!res.ok) {
-        console.warn(`blocks.json not found (${res.status}). Run "npm run blocks" to generate it.`);
-        blocksLoading = false;
-        return false;
-      }
-      blocksData = (await res.json()) as BlocksData;
-      console.log(
-        `Loaded blocks.json: ${blocksData.metadata.totalPoints} points, ` +
-        `${(blocksData.metadata.geocodeHitRate * 100).toFixed(1)}% hit rate`,
-      );
-      return true;
-    } catch (err) {
-      console.warn("Failed to load blocks.json:", err);
-      blocksLoading = false;
-      return false;
-    }
-  }
+  // --- Diary mode layers (clean pins, no labels/glow) ---
+  // Glow rings and text labels were removed to fix dense-area clutter
+  // (e.g. midtown Manhattan where 12+ pins cluster). Location names and
+  // film titles appear on hover via the deck.gl tooltip instead.
+  function buildDiaryLayers(): ScatterplotLayer[] {
+    if (!locationsData) return [];
 
-  /** Show/hide area-mode controls based on grain mode. */
-  function setAreaControlsVisible(visible: boolean): void {
-    unitRow.style.display = visible ? "" : "none";
-    vizRow.style.display = visible ? "" : "none";
-    legend.style.display = visible ? "block" : "none";
-    typeRow.style.display = visible ? "" : "none";
-    typeExpandable.style.display = visible ? "" : "none";
+    // Build data: only diary-matched locations
+    const pinData: DiaryPinData[] = [];
+    for (const loc of locationsData.locations) {
+      if (!matchedLocationIds.has(loc.locationId)) continue;
+      const matches = diaryByLocation.get(loc.locationId);
+      if (!matches) continue;
+      const titles = matches.map((m) => m.filmTitle);
+      const filmLabel = titles.length <= 2
+        ? titles.join(", ")
+        : `${titles[0]} +${titles.length - 1}`;
+      pinData.push({
+        position: [loc.lng, loc.lat],
+        locationId: loc.locationId,
+        name: loc.name,
+        filmLabel,
+        location: loc,
+      });
+    }
+
+    // Solid pins — prominent green dots with crisp white stroke.
+    // Larger than before (glow/labels removed) so they're easy to
+    // hover and click. Tooltip provides all detail on interaction.
+    const pins = new ScatterplotLayer({
+      id: "diary-pins",
+      data: pinData,
+      pickable: true,
+      opacity: 1,
+      stroked: true,
+      filled: true,
+      getPosition: (d: DiaryPinData) => d.position,
+      getRadius: 8,
+      radiusMinPixels: 6,
+      radiusMaxPixels: 14,
+      radiusUnits: "pixels" as const,
+      getFillColor: [0, 224, 84, 230],
+      getLineColor: [255, 255, 255, 220],
+      lineWidthMinPixels: 2,
+    });
+
+    return [pins];
   }
 
   // Tooltip styling is handled by the `.deck-tooltip` CSS class in style.css.
@@ -1251,17 +1439,6 @@ async function main(): Promise<void> {
   const needsFlatView = currentVizMode !== "bars" || currentGrain !== "area";
   const restoredViewState = needsFlatView ? FLAT_VIEW_STATE : INITIAL_VIEW_STATE;
 
-  // If grain was restored to "block", hide area-mode controls and apply
-  // toggle styling so the UI matches the state before any user interaction.
-  if (currentGrain !== "area") {
-    grainToggle.classList.add("toggle-active");
-    setAreaControlsVisible(false);
-    // Lazy-load blocks data for block grain mode
-    ensureBlocksData().then((loaded) => {
-      if (loaded) updateLayers();
-    });
-  }
-
   // If categories were restored from hash, update pill active states.
   // Use a non-narrowing check so TS doesn't infer `never` inside the callback.
   if (activeCategories !== null && activeCategories.size > 0) {
@@ -1277,18 +1454,37 @@ async function main(): Promise<void> {
     updateTypeLabel();
   }
 
+  // --- Post-processing effects pipeline ---
+  const effectsSystem = createEffectsSystem();
+  // Apply initial decade grading if restored from URL hash
+  effectsSystem.setDecadeGrade(currentDecade);
+
   const deck = new Deck({
     parent: document.querySelector<HTMLDivElement>("#app")!,
     initialViewState: heroSeen ? restoredViewState : HERO_VIEW_STATE,
     controller: boundedController,
+    effects: effectsSystem.effects,
     onViewStateChange: <T extends MapViewState>({ viewState }: { viewState: T }) => {
       return clampViewState(viewState);
     },
     layers: buildVisualizationLayers(currentMonth, currentUnit, computeFilteredCounts(currentUnit, activeCategories)),
-    getTooltip: ({ object }: { object?: AreaFeature | CircleDataPoint | CuratedLocation }) => {
+    getTooltip: ({ object }: { object?: AreaFeature | CircleDataPoint | CuratedLocation | DiaryPinData }) => {
       // No tooltip in block heatmap mode
       if (currentGrain === "block") return null;
       if (!object) return null;
+
+      // Diary pin tooltip — location name + film titles below
+      if ("filmLabel" in object) {
+        const d = object as DiaryPinData;
+        const matches = diaryByLocation.get(d.locationId) ?? [];
+        const filmLines = matches.map((m) => {
+          const stars = m.rating !== null ? ` ${renderStars(m.rating)}` : "";
+          return `<span style="color:#00e054">${escapeHtml(m.filmTitle)}${stars}</span>`;
+        }).join("<br/>");
+        return {
+          html: `<strong>${escapeHtml(d.name)}</strong><br/>${filmLines}`,
+        };
+      }
 
       // Location pin tooltip
       if ("locationId" in object) {
@@ -1321,11 +1517,18 @@ async function main(): Promise<void> {
         html: `<strong>${label}</strong><br/><span class="tooltip-count">${count}</span> shoots &middot; ${formatMonth(currentMonth)}`,
       };
     },
-    onClick: ({ object }: { object?: AreaFeature | CircleDataPoint | CuratedLocation }) => {
+    onClick: ({ object }: { object?: AreaFeature | CircleDataPoint | CuratedLocation | DiaryPinData }) => {
       // No detail panel in block heatmap mode
       if (currentGrain === "block") return;
       if (!object) {
         if (detailOpen) closeDetail();
+        return;
+      }
+
+      // Diary pin click — open location detail for the underlying location
+      if ("filmLabel" in object) {
+        const d = object as DiaryPinData;
+        openLocationDetail(d.location);
         return;
       }
 
@@ -1492,9 +1695,15 @@ async function main(): Promise<void> {
         const MAX_DISPLAY = 10;
         const displayed = areaFilms.slice(0, MAX_DISPLAY);
         const remaining = areaFilms.length - displayed.length;
-        const filmListHtml = displayed.map((f) =>
-          `<li class="notable-film-item">${escapeHtml(f.title)} (${f.year ?? "?"}) <span class="notable-film-location">@ ${escapeHtml(f.locationName)}</span></li>`,
-        ).join("");
+        const filmListHtml = displayed.map((f) => {
+          // Check if this film was watched (diary match)
+          const normKey = `${f.title.toLowerCase().trim()}::${f.year ?? "?"}`;
+          const diaryMatch = diaryByTitle.get(normKey);
+          const watchedBadge = diaryMatch
+            ? `<span class="diary-inline-badge">Watched${diaryMatch.rating !== null ? ` ${renderStars(diaryMatch.rating)}` : ""}</span>`
+            : "";
+          return `<li class="notable-film-item">${escapeHtml(f.title)} (${f.year ?? "?"})${watchedBadge} <span class="notable-film-location">@ ${escapeHtml(f.locationName)}</span></li>`;
+        }).join("");
         const moreHtml = remaining > 0
           ? `<li class="notable-film-more">and ${remaining} more</li>` : "";
         notableFilmsHtml = `
@@ -1553,6 +1762,7 @@ async function main(): Promise<void> {
     }
 
     detailPanel.classList.add("open");
+    openPanelSpring();
 
     // Close button handler
     detailPanel.querySelector("#detail-close")?.addEventListener("click", closeDetail);
@@ -1564,7 +1774,9 @@ async function main(): Promise<void> {
     detailAreaKey = null;
     detailAreaLabel = null;
     detailAreaFormalLabel = null;
-    detailPanel.classList.remove("open", "no-animate");
+    // Spring animates the panel out; the animation callback removes
+    // the "open" class once the spring settles at 100%.
+    closePanelSpring();
   }
 
   /** Open detail panel for a curated filming location pin. */
@@ -1611,9 +1823,39 @@ async function main(): Promise<void> {
         </div>`;
     }).join("");
 
+    // Build diary "You watched this" section if this location has matches
+    let diaryHtml = "";
+    const locDiaryMatches = diaryByLocation.get(location.locationId);
+    if (locDiaryMatches && locDiaryMatches.length > 0) {
+      const entriesHtml = locDiaryMatches.map((m) => {
+        const starsHtml = m.rating !== null
+          ? `<span class="diary-stars">${renderStars(m.rating)}</span>` : "";
+        const dateHtml = m.watchedDate
+          ? `<span class="diary-date">${formatDate(m.watchedDate)}</span>` : "";
+        const titleHtml = locDiaryMatches.length > 1
+          ? `<span class="diary-film-title">${escapeHtml(m.filmTitle)}</span>` : "";
+        return `
+          <div class="diary-match-entry">
+            ${titleHtml}
+            ${starsHtml}
+            ${dateHtml}
+            <a class="diary-link" href="${escapeHtml(m.letterboxdUrl)}" target="_blank" rel="noopener">Letterboxd \u2192</a>
+          </div>`;
+      }).join("");
+
+      diaryHtml = `
+        <div class="diary-match-section">
+          <div class="diary-match-header">
+            <span class="diary-badge">You watched this</span>
+          </div>
+          ${entriesHtml}
+        </div>`;
+    }
+
     detailPanel.innerHTML = `
       <button type="button" id="detail-close" aria-label="Close detail panel">\u2715</button>
       <h2>${escapeHtml(location.name)}</h2>
+      ${diaryHtml}
       <div class="detail-stat">
         <span class="detail-big">${films.length}</span>
         <span class="detail-label">${films.length === 1 ? "film" : "films"} shot here${currentDecade !== null ? ` (${currentDecade}s)` : ""}</span>
@@ -1628,6 +1870,7 @@ async function main(): Promise<void> {
 
     detailPanel.classList.remove("no-animate");
     detailPanel.classList.add("open");
+    openPanelSpring();
     detailPanel.querySelector("#detail-close")?.addEventListener("click", closeDetail);
   }
 
@@ -1635,6 +1878,26 @@ async function main(): Promise<void> {
   // --- Update layers ---
   function updateLayers(): void {
     updateActiveNotch();
+
+    // Diary mode: dim base boundary + diary glow/pins/labels only
+    if (diaryMode) {
+      captionEl.style.opacity = "0";
+      // Dimmer base for diary — let the green pins be the visual focus
+      const dimBase = new GeoJsonLayer({
+        id: "base-boundary",
+        data: currentUnit === "cd" ? cdBoundaries : zipBoundaries,
+        extruded: false,
+        pickable: false,
+        stroked: true,
+        filled: true,
+        getFillColor: [8, 8, 16, 160],
+        getLineColor: [255, 255, 255, 15],
+        lineWidthMinPixels: 0.5,
+      });
+      const diaryLayers = buildDiaryLayers();
+      deck.setProps({ layers: [dimBase, ...diaryLayers] });
+      return;
+    }
 
     if (currentGrain === "block") {
       // In block mode, hide captions and just render the heatmap
@@ -1705,49 +1968,6 @@ async function main(): Promise<void> {
     updateLayers();
   });
 
-  // --- Grain toggle (area <-> block heatmap) ---
-  grainToggle.addEventListener("click", async (e) => {
-    e.stopPropagation();
-    if (currentGrain === "area") {
-      // Switch to block mode — lazy-load blocks.json
-      const loaded = await ensureBlocksData();
-      if (!loaded) return;
-
-      currentGrain = "block";
-      grainToggle.textContent = "Block";
-      grainToggle.classList.add("toggle-active");
-
-      // Heatmap looks best top-down
-      deck.setProps({
-        initialViewState: { ...FLAT_VIEW_STATE, transitionDuration: 800 },
-      });
-
-      // Hide area-mode-only controls
-      setAreaControlsVisible(false);
-
-      // Close detail panel if open (not applicable in block mode)
-      if (detailOpen) closeDetail();
-
-      updateLayers();
-    } else {
-      // Switch back to area mode
-      currentGrain = "area";
-      grainToggle.textContent = "Area";
-      grainToggle.classList.remove("toggle-active");
-
-      // Return to the appropriate camera for current viz mode
-      const targetView = currentVizMode === "bars" ? INITIAL_VIEW_STATE : FLAT_VIEW_STATE;
-      deck.setProps({
-        initialViewState: { ...targetView, transitionDuration: 800 },
-      });
-
-      // Restore area-mode controls
-      setAreaControlsVisible(true);
-
-      updateLayers();
-    }
-  });
-
   // --- Locations toggle (in toolbar landmarks row) ---
   if (landmarksToggle && landmarksExpandable) {
     landmarksToggle.addEventListener("click", (e) => {
@@ -1760,9 +1980,83 @@ async function main(): Promise<void> {
       landmarksExpandable!.classList.toggle("expanded", showLocations);
       if (!showLocations) {
         currentDecade = null;
+        effectsSystem.setDecadeGrade(null);
         updateDecadePillStates();
       }
       updateLayers();
+    });
+  }
+
+  // --- Diary mode toggle ---
+  /** Show/hide UI elements when entering or exiting diary mode. */
+  function setDiaryModeUI(active: boolean): void {
+    // Elements to hide in diary mode
+    const hideEls = [timeline, legend, unitRow, vizRow, typeRow, typeExpandable];
+    if (landmarksRow) hideEls.push(landmarksRow);
+    if (landmarksExpandable) hideEls.push(landmarksExpandable);
+
+    for (const el of hideEls) {
+      (el as HTMLElement).classList.toggle("diary-hidden", active);
+    }
+
+    captionEl.classList.toggle("diary-hidden", active);
+    diaryStatsCard.classList.toggle("diary-active", active);
+  }
+
+  if (diaryToggle) {
+    diaryToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      diaryMode = !diaryMode;
+      diaryToggle!.textContent = diaryMode ? "On" : "Off";
+      diaryToggle!.classList.toggle("toggle-active-diary", diaryMode);
+      diaryToggle!.setAttribute("aria-pressed", String(diaryMode));
+
+      // Close any open detail panel when toggling
+      if (detailOpen) closeDetail();
+
+      setDiaryModeUI(diaryMode);
+
+      // Camera: diary mode = flat top-down (zoomed to Manhattan where most pins are),
+      // exit = restore based on current viz mode
+      const diaryView = { ...FLAT_VIEW_STATE, zoom: 11.5, latitude: 40.755 };
+      const targetView = diaryMode
+        ? diaryView
+        : currentVizMode === "bars" ? INITIAL_VIEW_STATE : FLAT_VIEW_STATE;
+      deck.setProps({
+        initialViewState: {
+          ...targetView,
+          transitionDuration: 1000,
+        },
+      });
+
+      updateLayers();
+    });
+  }
+
+  // --- Diary stats card: click a film row to fly-to its first location ---
+  if (hasDiaryData && locationsData && diaryData) {
+    diaryStatsCard.addEventListener("click", (e) => {
+      const filmEl = (e.target as HTMLElement).closest(".diary-stats-film");
+      if (!filmEl) return;
+      const title = filmEl.getAttribute("data-film-title");
+      if (!title) return;
+      const match = diaryData!.matches.find((m) => m.filmTitle === title);
+      if (!match || match.locationIds.length === 0) return;
+      // Find the first location with coordinates
+      const loc = locationsData!.locations.find((l) => match.locationIds.includes(l.locationId));
+      if (!loc) return;
+      // Fly camera to this location
+      deck.setProps({
+        initialViewState: {
+          ...FLAT_VIEW_STATE,
+          longitude: loc.lng,
+          latitude: loc.lat,
+          zoom: 14,
+          transitionDuration: 1200,
+        },
+      });
+      // Open the location detail panel
+      openLocationDetail(loc);
     });
   }
 
@@ -1786,6 +2080,84 @@ async function main(): Promise<void> {
   }
   // Primary: scoped to the slider element for correct ARIA role="slider" semantics
   timelineTrack.addEventListener("keydown", handleSliderArrow);
+
+  // --- Drag-to-scrub with magnetic snapping ---
+  // Adds continuous drag interaction (mouse + touch) on the timeline track.
+  // While dragging, the scrubber gently snaps toward peak-activity months —
+  // months in the top 30% of total shoots — creating a tactile "gravity well"
+  // that guides exploration toward interesting dates.
+
+  let isScrubbing = false;
+
+  /** Apply gravitational pull toward nearby peak months.
+   *  Returns a fractional index biased toward peaks within ±2 months. */
+  function applyMagneticPull(rawIndex: number, totals: number[]): number {
+    const maxTotal = Math.max(...totals);
+    if (maxTotal === 0) return rawIndex;
+
+    let pull = 0;
+    const pullRange = 2;     // months of gravitational influence
+    const pullStrength = 0.3; // max pull per peak (0–1)
+    const threshold = 0.7;    // only snap to top 30% months
+
+    for (let i = 0; i < totals.length; i++) {
+      const dist = Math.abs(rawIndex - i);
+      if (dist > 0 && dist <= pullRange) {
+        const prominence = totals[i] / maxTotal;
+        if (prominence >= threshold) {
+          const force = pullStrength * prominence * (1 - dist / pullRange);
+          pull += (i - rawIndex) * force;
+        }
+      }
+    }
+    return rawIndex + pull;
+  }
+
+  function scrubToPosition(clientX: number): void {
+    const rect = timelineTrack.getBoundingClientRect();
+    const rawRatio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const rawIndex = rawRatio * (months.length - 1);
+
+    const totals = computeMonthTotals();
+    const snapped = Math.round(applyMagneticPull(rawIndex, totals));
+    const clampedIdx = Math.max(0, Math.min(months.length - 1, snapped));
+
+    if (clampedIdx !== currentMonthIdx) {
+      currentMonthIdx = clampedIdx;
+      currentMonth = months[currentMonthIdx];
+      updateLayers();
+    }
+  }
+
+  timelineTrack.addEventListener("mousedown", (e) => {
+    isScrubbing = true;
+    scrubToPosition(e.clientX);
+    e.preventDefault(); // prevent text selection during drag
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isScrubbing) return;
+    scrubToPosition(e.clientX);
+  });
+
+  window.addEventListener("mouseup", () => {
+    isScrubbing = false;
+  });
+
+  // Touch support for mobile scrubbing
+  timelineTrack.addEventListener("touchstart", (e) => {
+    isScrubbing = true;
+    if (e.touches.length > 0) scrubToPosition(e.touches[0].clientX);
+  }, { passive: true });
+
+  window.addEventListener("touchmove", (e) => {
+    if (!isScrubbing) return;
+    if (e.touches.length > 0) scrubToPosition(e.touches[0].clientX);
+  }, { passive: true });
+
+  window.addEventListener("touchend", () => {
+    isScrubbing = false;
+  });
 
   // --- Global keyboard shortcuts ---
   document.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -1818,7 +2190,7 @@ if (!heroSeen) {
   hero.innerHTML = `
     <h1 class="hero-title">On Location</h1>
     <span class="hero-accent"></span>
-    <p class="hero-subtitle">NYC film &amp; TV permit activity, month by month</p>
+    <p class="hero-subtitle">New York City&#x27;s filming landscape, mapped</p>
     <p class="hero-loading">Loading</p>
   `;
   document.body.appendChild(hero);
