@@ -9,7 +9,7 @@
  * system with `sampler`-type passes for texture re-sampling.
  */
 
-import { PostProcessEffect } from "@deck.gl/core";
+import { PostProcessEffect, LightingEffect, AmbientLight, DirectionalLight } from "@deck.gl/core";
 import type { Effect } from "@deck.gl/core";
 import {
   vignette,
@@ -204,20 +204,20 @@ export function createEffectsSystem(): EffectsSystem {
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const bloomEffect = new PostProcessEffect(bloomModule as any, {
-    threshold: 0.35,
-    intensity: 0.2,
-    radius: 4.0,
+    threshold: 0.5,
+    intensity: 0.1,
+    radius: 3.0,
   });
 
   const chromaticEffect = new PostProcessEffect(
     chromaticAberrationModule as any,
-    { amount: 2.5 },
+    { amount: 1.0 },
   );
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
   const vignetteEffect = new PostProcessEffect(vignette, {
-    radius: 0.6,
-    amount: 0.35,
+    radius: 0.7,
+    amount: 0.2,
   });
 
   // --- Decade grading (parameters updated dynamically) ---
@@ -237,9 +237,27 @@ export function createEffectsSystem(): EffectsSystem {
 
   const noiseEffect = new PostProcessEffect(noise, { amount: 0 });
 
-  // Order: bloom → chromatic aberration → grading → vignette.
+  // --- Lighting: explicit directional lights for depth cues ---
+  // Low ambient so directional shading defines top-vs-side face contrast.
+  // Two directional lights: primary from northwest-above, fill from southeast.
+  const ambientLight = new AmbientLight({ color: [255, 255, 255], intensity: 0.4 });
+  const primaryLight = new DirectionalLight({
+    color: [255, 255, 255],
+    intensity: 1.0,
+    direction: [-1, -3, -1],
+  });
+  const fillLight = new DirectionalLight({
+    color: [255, 255, 255],
+    intensity: 0.4,
+    direction: [1, 2, -0.5],
+  });
+  const lightingEffect = new LightingEffect({ ambientLight, primaryLight, fillLight });
+
+  // Order: lighting → bloom → chromatic aberration → grading → vignette.
+  // Lighting first so 3D shading is computed before post-processing.
   // Vignette last so edge-darkening applies after everything else.
   const effects: Effect[] = [
+    lightingEffect,
     bloomEffect,
     chromaticEffect,
     hueSatEffect,

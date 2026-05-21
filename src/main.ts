@@ -439,7 +439,7 @@ const INITIAL_VIEW_STATE = {
   latitude: 40.72,
   zoom: 9.8,
   pitch: 45,
-  bearing: 0,
+  bearing: -20,
 };
 
 /** Top-down view for circles mode — no pitch, no bearing. */
@@ -463,11 +463,11 @@ const ELEVATION_SCALE = 150;
 /** Multi-stop color scale: dark indigo -> deep purple -> warm brick -> orange -> bright amber.
  *  More perceptually distinct than a simple 2-point lerp which produces muddy mid-tones. */
 const COLOR_STOPS: [number, [number, number, number]][] = [
-  [0.0,  [30, 30, 70]],     // deep indigo
-  [0.25, [90, 40, 120]],    // deep purple
-  [0.5,  [180, 70, 60]],    // warm brick/crimson
+  [0.0,  [80, 50, 110]],    // muted purple (visible on dark map)
+  [0.25, [130, 50, 120]],   // purple-magenta
+  [0.5,  [190, 80, 60]],    // warm brick
   [0.75, [240, 150, 40]],   // orange
-  [1.0,  [255, 210, 70]],   // bright amber
+  [1.0,  [255, 215, 70]],   // bright amber
 ];
 
 // --- Helpers ---
@@ -556,7 +556,7 @@ function getColor(
   count: number,
   maxCount: number,
 ): [number, number, number, number] {
-  if (maxCount === 0 || count === 0) return [30, 30, 70, 200];
+  if (maxCount === 0 || count === 0) return [30, 30, 70, 255];
   const t = count / maxCount;
 
   // Find the two stops we're between
@@ -575,7 +575,7 @@ function getColor(
     Math.round(lerp(lo[1][0], hi[1][0], localT)),
     Math.round(lerp(lo[1][1], hi[1][1], localT)),
     Math.round(lerp(lo[1][2], hi[1][2], localT)),
-    240,
+    255,
   ];
 }
 
@@ -1459,10 +1459,15 @@ async function main(): Promise<void> {
       extruded: true,
       wireframe: false,
       pickable: true,
+      autoHighlight: true,
+      highlightColor: [255, 255, 255, 40],
       getElevation: (f: AreaFeature) => {
         const resolved = resolveFeature(f, unit);
         if (!resolved) return 0;
-        return (countsMap[resolved.countsKey]?.[month] ?? 0) * ELEVATION_SCALE;
+        const count = countsMap[resolved.countsKey]?.[month] ?? 0;
+        // Sqrt scaling compresses the range: hot spots are still tall
+        // but don't tower over everything, reducing back-to-front occlusion.
+        return Math.sqrt(count) * ELEVATION_SCALE;
       },
       getFillColor: (f: AreaFeature) => {
         const resolved = resolveFeature(f, unit);
@@ -1472,7 +1477,7 @@ async function main(): Promise<void> {
         return getColor(count, maxCount);
       },
       getLineColor: [80, 80, 100, 200],
-      material: { ambient: 0.6, diffuse: 0.6, shininess: 20 },
+      material: { ambient: 0.35, diffuse: 0.8, shininess: 12 },
       updateTriggers: {
         getElevation: [month, unit, catTrigger],
         getFillColor: [month, unit, catTrigger],
@@ -1559,11 +1564,11 @@ async function main(): Promise<void> {
       intensity: 1,
       threshold: 0.05,
       colorRange: [
-        [30, 30, 70],      // deep indigo
-        [90, 40, 120],     // deep purple
-        [180, 70, 60],     // warm brick
+        [80, 50, 110],     // muted purple
+        [130, 50, 120],    // purple-magenta
+        [190, 80, 60],     // warm brick
         [240, 150, 40],    // orange
-        [255, 210, 70],    // bright amber
+        [255, 215, 70],    // bright amber
         [255, 240, 140],   // light amber (glow)
       ],
     });

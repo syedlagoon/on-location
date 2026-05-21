@@ -31,7 +31,7 @@
   --color-border-accent: rgba(255, 200, 60, 0.5);
 
   /* Colors — data */
-  --color-data-low: rgb(30, 30, 70);
+  --color-data-low: rgb(80, 50, 110);
   --color-data-high: rgb(255, 210, 70);
 
   /* Colors — diary (Letterboxd green accent) */
@@ -544,8 +544,8 @@ body {
   background: linear-gradient(
     to top,
     var(--color-data-low) 0%,
-    rgb(90, 40, 120) 25%,
-    rgb(180, 70, 60) 50%,
+    rgb(130, 50, 120) 25%,
+    rgb(190, 80, 60) 50%,
     rgb(240, 150, 40) 75%,
     var(--color-data-high) 100%
   );
