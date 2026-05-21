@@ -460,8 +460,15 @@ const HERO_VIEW_STATE = {
 };
 
 const ELEVATION_SCALE = 150;
-const COLOR_ZERO: [number, number, number] = [40, 40, 80];
-const COLOR_MAX: [number, number, number] = [255, 200, 60];
+/** Multi-stop color scale: dark indigo -> deep purple -> warm brick -> orange -> bright amber.
+ *  More perceptually distinct than a simple 2-point lerp which produces muddy mid-tones. */
+const COLOR_STOPS: [number, [number, number, number]][] = [
+  [0.0,  [30, 30, 70]],     // deep indigo
+  [0.25, [90, 40, 120]],    // deep purple
+  [0.5,  [180, 70, 60]],    // warm brick/crimson
+  [0.75, [240, 150, 40]],   // orange
+  [1.0,  [255, 210, 70]],   // bright amber
+];
 
 // --- Helpers ---
 
@@ -549,13 +556,26 @@ function getColor(
   count: number,
   maxCount: number,
 ): [number, number, number, number] {
-  if (maxCount === 0 || count === 0) return [...COLOR_ZERO, 200];
+  if (maxCount === 0 || count === 0) return [30, 30, 70, 200];
   const t = count / maxCount;
+
+  // Find the two stops we're between
+  let lo = COLOR_STOPS[0], hi = COLOR_STOPS[COLOR_STOPS.length - 1];
+  for (let i = 0; i < COLOR_STOPS.length - 1; i++) {
+    if (t >= COLOR_STOPS[i][0] && t <= COLOR_STOPS[i + 1][0]) {
+      lo = COLOR_STOPS[i];
+      hi = COLOR_STOPS[i + 1];
+      break;
+    }
+  }
+
+  const range = hi[0] - lo[0];
+  const localT = range > 0 ? (t - lo[0]) / range : 0;
   return [
-    Math.round(lerp(COLOR_ZERO[0], COLOR_MAX[0], t)),
-    Math.round(lerp(COLOR_ZERO[1], COLOR_MAX[1], t)),
-    Math.round(lerp(COLOR_ZERO[2], COLOR_MAX[2], t)),
-    220,
+    Math.round(lerp(lo[1][0], hi[1][0], localT)),
+    Math.round(lerp(lo[1][1], hi[1][1], localT)),
+    Math.round(lerp(lo[1][2], hi[1][2], localT)),
+    240,
   ];
 }
 
@@ -948,10 +968,13 @@ async function main(): Promise<void> {
   }
 
   // Assemble toolbar
-  if (diaryRow) toolbar.append(diaryRow);
   toolbar.append(unitRow, vizRow, typeRow, typeExpandable);
   if (landmarksRow && landmarksExpandable) {
     toolbar.append(landmarksRow, landmarksExpandable);
+    // Diary is a sub-section of landmarks, inside the expandable
+    if (diaryRow) {
+      landmarksExpandable.appendChild(diaryRow);
+    }
   }
   document.body.appendChild(toolbar);
 
@@ -1536,12 +1559,12 @@ async function main(): Promise<void> {
       intensity: 1,
       threshold: 0.05,
       colorRange: [
-        [40, 40, 80],
-        [80, 60, 120],
-        [160, 100, 80],
-        [220, 160, 60],
-        [255, 200, 60],
-        [255, 240, 140],
+        [30, 30, 70],      // deep indigo
+        [90, 40, 120],     // deep purple
+        [180, 70, 60],     // warm brick
+        [240, 150, 40],    // orange
+        [255, 210, 70],    // bright amber
+        [255, 240, 140],   // light amber (glow)
       ],
     });
   }
@@ -2222,6 +2245,15 @@ async function main(): Promise<void> {
         currentDecade = null;
         effectsSystem.setDecadeGrade(null);
         updateDecadePillStates();
+        // Also turn off diary mode when landmarks are disabled
+        if (diaryMode && diaryToggle) {
+          diaryMode = false;
+          diaryToggle.textContent = "Off";
+          diaryToggle.classList.remove("toggle-active-diary");
+          diaryToggle.setAttribute("aria-pressed", "false");
+          if (detailOpen) closeDetail();
+          setDiaryModeUI(false);
+        }
       }
       updateLayers();
     });
@@ -2230,10 +2262,8 @@ async function main(): Promise<void> {
   // --- Diary mode toggle ---
   /** Show/hide UI elements when entering or exiting diary mode. */
   function setDiaryModeUI(active: boolean): void {
-    // Elements to hide in diary mode
+    // Elements to hide in diary mode (not landmarks — diary is nested inside it)
     const hideEls = [timeline, legend, unitRow, vizRow, typeRow, typeExpandable];
-    if (landmarksRow) hideEls.push(landmarksRow);
-    if (landmarksExpandable) hideEls.push(landmarksExpandable);
 
     for (const el of hideEls) {
       (el as HTMLElement).classList.toggle("diary-hidden", active);
