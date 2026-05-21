@@ -34,6 +34,11 @@
   --color-data-low: rgb(40, 40, 80);
   --color-data-high: rgb(255, 200, 60);
 
+  /* Colors — diary (Letterboxd green accent) */
+  --color-diary: #00e054;
+  --color-diary-subtle: rgba(0, 224, 84, 0.12);
+  --color-diary-border: rgba(0, 224, 84, 0.4);
+
   /* Colors — categories */
   --color-cat-television: #6fa8dc;
   --color-cat-film: #e06666;
@@ -591,6 +596,27 @@ body {
 }
 
 
+/* --- Control hint (auto-fades after 5s) --- */
+
+#control-hint {
+  position: fixed;
+  bottom: calc(var(--space-xl) + 16px);
+  right: var(--space-xl);
+  font-size: var(--text-label);
+  font-family: var(--font-mono);
+  color: var(--color-fg-subtle);
+  z-index: 2;
+  letter-spacing: 0.02em;
+  opacity: 1;
+  transition: opacity 1s ease-out;
+  pointer-events: none;
+}
+
+#control-hint.control-hint-hidden {
+  opacity: 0;
+}
+
+
 /* --- Caption --- */
 
 #caption {
@@ -685,16 +711,22 @@ body {
   border-left: 1px solid var(--color-border);
   padding: var(--space-2xl) var(--space-xl);
   z-index: 5;
-  transform: translateX(100%);
-  transition: transform var(--transition-panel);
+  /* Spring-driven via --panel-offset (0 = open, 100 = closed).
+     JS sets the custom property; CSS maps it to the right axis. */
+  --panel-offset: 100;
+  transform: translateX(calc(var(--panel-offset) * 1%));
+  /* No CSS transition on transform — the JS spring handles easing.
+     Keep transition on opacity for stagger animations. */
   overflow-y: auto;
   color: var(--color-fg);
   box-shadow: -8px 0 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   will-change: transform;
 }
 
+/* The .open class is kept for semantic state (ARIA, child animations)
+   but no longer drives the transform — the spring does. */
 #detail-panel.open {
-  transform: translateX(0);
+  /* intentionally empty — spring JS sets --panel-offset to 0 */
 }
 
 /* Gradient border on left edge — amber fading to transparent */
@@ -1233,6 +1265,271 @@ body {
 }
 
 
+/* --- Diary (Letterboxd integration) --- */
+
+/* "You watched this" section inside location detail panel */
+.diary-match-section {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--color-diary-subtle);
+  border-left: 2px solid var(--color-diary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.diary-match-header {
+  margin-bottom: var(--space-sm);
+}
+
+.diary-badge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-diary-subtle);
+  color: var(--color-diary);
+  border: 1px solid var(--color-diary-border);
+  line-height: 1.4;
+}
+
+.diary-match-entry {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  flex-wrap: wrap;
+}
+
+.diary-match-entry + .diary-match-entry {
+  border-top: 1px solid rgba(0, 224, 84, 0.1);
+  margin-top: var(--space-xs);
+  padding-top: var(--space-sm);
+}
+
+.diary-stars {
+  color: var(--color-diary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-body);
+  letter-spacing: 0.02em;
+}
+
+.diary-date {
+  font-size: var(--text-caption);
+  color: var(--color-fg-muted);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.diary-film-title {
+  font-size: var(--text-caption);
+  color: var(--color-fg);
+  font-weight: 500;
+  flex-basis: 100%;
+}
+
+.diary-link {
+  font-size: var(--text-label);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-diary);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color var(--transition-fast);
+}
+
+.diary-link:hover {
+  color: #33ff77;
+}
+
+/* Inline "Watched" badge in area detail notable films */
+.diary-inline-badge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-diary);
+  margin-left: var(--space-xs);
+  white-space: nowrap;
+}
+
+/* Summary badge below title overlay */
+.diary-count {
+  font-size: var(--text-caption);
+  font-family: var(--font-mono);
+  color: var(--color-diary);
+  margin-top: var(--space-sm);
+  opacity: 0;
+  letter-spacing: 0.02em;
+  animation: uiFadeIn 600ms cubic-bezier(0.16, 1, 0.3, 1) 800ms forwards;
+}
+
+
+/* --- Diary mode --- */
+
+/* Hide elements when diary mode is active */
+.diary-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity var(--transition-slow) !important;
+}
+
+/* Diary toggle active state: green tint (Letterboxd green) */
+.toolbar-toggle.toggle-active-diary {
+  background: var(--color-diary-subtle);
+  border-color: var(--color-diary-border);
+  color: var(--color-diary);
+}
+
+/* Diary toolbar row separator accent when active */
+.toolbar-row-diary {
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* --- Diary stats card (replaces timeline in diary mode) --- */
+
+#diary-stats-card {
+  position: fixed;
+  bottom: var(--space-lg);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  width: 340px;
+  max-width: calc(100vw - var(--space-2xl) * 2);
+  max-height: 50vh;
+  z-index: 3;
+  background: var(--color-surface);
+  backdrop-filter: blur(var(--blur-surface));
+  -webkit-backdrop-filter: blur(var(--blur-surface));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg) var(--space-xl);
+  box-shadow: var(--shadow-panel), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Green accent border on left edge */
+#diary-stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    var(--color-diary) 0%,
+    rgba(0, 224, 84, 0.15) 60%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+#diary-stats-card.diary-active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.diary-stats-header {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-diary);
+  margin-bottom: var(--space-xs);
+  line-height: 1;
+}
+
+.diary-stats-summary {
+  font-size: var(--text-caption);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fg-muted);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  letter-spacing: 0.02em;
+}
+
+.diary-stats-list {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 224, 84, 0.25) rgba(255, 255, 255, 0.03);
+}
+
+.diary-stats-list::-webkit-scrollbar {
+  width: 4px;
+}
+.diary-stats-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 2px;
+}
+.diary-stats-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 224, 84, 0.25);
+  border-radius: 2px;
+}
+
+.diary-stats-film {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast),
+              box-shadow var(--transition-fast);
+  user-select: none;
+}
+
+.diary-stats-film:hover {
+  background: var(--color-surface-hover);
+  box-shadow: inset 2px 0 0 var(--color-diary);
+}
+
+.diary-stats-film:active {
+  background: var(--color-surface-active);
+  box-shadow: inset 2px 0 0 var(--color-diary);
+}
+
+.diary-stats-stars {
+  color: var(--color-diary);
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  min-width: 48px;
+  letter-spacing: 0.02em;
+}
+
+.diary-stats-title {
+  font-size: var(--text-caption);
+  color: var(--color-fg);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.diary-stats-year {
+  color: var(--color-fg-muted);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+
 /* --- Responsive (ultra-wide, >=1600px) --- */
 
 @media (min-width: 1600px) {
@@ -1383,6 +1680,13 @@ body {
     font-size: 9px;
   }
 
+  #control-hint {
+    bottom: auto;
+    top: 184px;
+    right: var(--space-lg);
+    font-size: 9px;
+  }
+
   .toolbar-expandable .cat-pill {
     font-size: 10px;
     padding: 3px 6px;
@@ -1406,7 +1710,8 @@ body {
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     border-left: none;
     border-top: 1px solid var(--color-border);
-    transform: translateY(100%);
+    /* Mobile: spring drives Y axis instead of X */
+    transform: translateY(calc(var(--panel-offset) * 1%));
     box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
   }
 
@@ -1426,7 +1731,7 @@ body {
   }
 
   #detail-panel.open {
-    transform: translateY(0);
+    /* Spring handles transform via --panel-offset */
   }
 
   .notch-tooltip {
@@ -1459,6 +1764,14 @@ body {
   .detail-film-poster {
     width: 48px;
     height: 72px;
+  }
+
+  #diary-stats-card {
+    width: 92%;
+    max-width: calc(100vw - var(--space-xl));
+    bottom: 10px;
+    padding: var(--space-md) var(--space-lg);
+    max-height: 40vh;
   }
 }
 

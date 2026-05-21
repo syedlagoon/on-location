@@ -932,6 +932,12 @@ async function main(): Promise<void> {
     `Data: <a href="https://data.cityofnewyork.us/City-Government/Film-Permits/tg4x-b46p" target="_blank" rel="noopener">NYC Open Data Film Permits</a>`;
   document.body.appendChild(attribution);
 
+  // --- Map control hint (auto-hides after 5s) ---
+  const controlHint = document.createElement("div");
+  controlHint.id = "control-hint";
+  controlHint.textContent = "Right-drag to rotate · Ctrl-drag to pitch · Scroll to zoom";
+  document.body.appendChild(controlHint);
+
   // --- Diary stats card (replaces timeline when diary mode is active) ---
   const diaryStatsCard = document.createElement("div");
   diaryStatsCard.id = "diary-stats-card";
@@ -1430,7 +1436,7 @@ async function main(): Promise<void> {
       longitude: Math.max(NYC_BOUNDS.minLng, Math.min(NYC_BOUNDS.maxLng, viewState.longitude)),
       latitude: Math.max(NYC_BOUNDS.minLat, Math.min(NYC_BOUNDS.maxLat, viewState.latitude)),
       zoom: Math.max(NYC_BOUNDS.minZoom, Math.min(NYC_BOUNDS.maxZoom, viewState.zoom)),
-      pitch: Math.max(0, Math.min(60, viewState.pitch ?? 0)),
+      pitch: Math.max(0, Math.min(75, viewState.pitch ?? 0)),
     };
   }
 
@@ -1572,11 +1578,13 @@ async function main(): Promise<void> {
 
   // --- Stagger UI elements in after hero dismisses ---
   function revealUI(): void {
-    const elements = [titleOverlay, captionEl, legend, timeline, toolbar, attribution];
+    const elements = [titleOverlay, captionEl, legend, timeline, toolbar, attribution, controlHint];
     elements.forEach((el, i) => {
       el.classList.add("ui-fade-in");
       el.style.animationDelay = `${200 + i * 80}ms`;
     });
+    // Auto-hide control hint after 5 seconds
+    setTimeout(() => controlHint.classList.add("control-hint-hidden"), 5000);
   }
 
   // --- Hero dismiss (cinematic pull-back) ---
