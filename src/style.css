@@ -503,11 +503,11 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0 var(--space-md);
-  min-width: 46px;
+  width: 62px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
 }
@@ -1880,7 +1880,7 @@ body {
   .toolbar-toggle {
     font-size: 10px;
     height: 32px;
-    min-width: 44px;
+    width: 58px;
   }
 
   #timeline {
