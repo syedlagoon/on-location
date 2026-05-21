@@ -238,11 +238,42 @@ Living design document. All visual decisions, tokens, and rationale live here.
 - No WebGL shader effects (Phase 12 / stretch)
 - No spring physics on panel (browser CSS springs not yet widely supported)
 
+## Themes
+
+The app supports two color modes: **Night** (default) and **Day**, toggled from the toolbar. Theme preference persists in `localStorage`.
+
+### Night mode (default)
+
+The original dark theme. Dark map base (`#0a0a0a`), navy fill `[12,12,28]`, warm amber/purple data bars, glass-morphism panels with dark surfaces. Optimized for low-light and cinematic feel.
+
+### Day mode
+
+Warm parchment map base (`#f5f3ee`), frosted white UI panels, burnt orange accent (`#c45a20`). Data bars shift to a navy → teal → forest green → burnt sienna ramp for contrast against the light background.
+
+| Token | Night | Day |
+|---|---|---|
+| `--color-bg` | `#0a0a0a` | `#f5f3ee` |
+| `--color-fg` | `#f0f0f0` | `#1a1a1a` |
+| `--color-accent` | `#ffc83c` | `#c45a20` |
+| `--color-surface` | `rgba(12,12,20,0.72)` | `rgba(255,255,255,0.78)` |
+| `--color-border` | `rgba(255,255,255,0.08)` | `rgba(0,0,0,0.10)` |
+| `--color-data-low` | `rgb(80,50,110)` | `rgb(40,60,90)` |
+| `--color-data-high` | `rgb(255,210,70)` | `rgb(180,70,30)` |
+
+Day mode also reduces bloom intensity (0.05 vs 0.1), raises ambient light (0.6 vs 0.4), and softens vignette (0.1 vs 0.2).
+
+### Implementation
+
+- **CSS**: `[data-theme="day"]` selector overrides ~15 CSS custom properties in `src/style.css`
+- **deck.gl colors**: `src/theme.ts` exports `ThemePalette` objects; layer builders read from `currentTheme`
+- **Effects**: `src/effects.ts` `setTheme()` adjusts bloom, vignette, chromatic aberration, and lighting
+- **FOUC prevention**: Inline `<script>` in `index.html` `<head>` reads `localStorage` before CSS loads
+
 ## Decisions Log
 
 | Date | Decision | Rationale |
 |---|---|---|
-| 2026-05-20 | Dark theme only, no light mode | Data viz on map requires dark bg; aligns with cinematic brand |
+| 2026-05-20 | ~~Dark theme only~~ → Night/Day toggle added | Originally dark-only for cinematic brand; day mode added for outdoor/bright-ambient use |
 | 2026-05-20 | Inter + JetBrains Mono font pair | Inter is clean/geometric for UI; JetBrains Mono has true tabular nums for data |
 | 2026-05-20 | Amber (#ffc83c) as sole accent | Film/warmth association; high contrast on dark; already established in v1 |
 | 2026-05-20 | Glass-morphism for floating panels | Creates depth hierarchy over map without occluding; feels modern |

@@ -18,6 +18,8 @@ import {
   sepia,
   brightnessContrast,
 } from "@luma.gl/effects";
+import { THEMES } from "./theme";
+import type { ThemeName } from "./theme";
 
 // --- Custom shader modules ---
 
@@ -193,6 +195,8 @@ export interface EffectsSystem {
   effects: Effect[];
   /** Update decade color grading. Pass null to reset to neutral. */
   setDecadeGrade: (decade: number | null) => void;
+  /** Update lighting and post-processing effects for the given theme. */
+  setTheme: (name: ThemeName) => void;
 }
 
 /**
@@ -281,5 +285,26 @@ export function createEffectsSystem(): EffectsSystem {
     noiseEffect.setProps({ amount: grade.noise });
   }
 
-  return { effects, setDecadeGrade };
+  function setTheme(name: ThemeName): void {
+    const palette = THEMES[name];
+
+    // Post-processing: bloom, vignette, chromatic aberration
+    bloomEffect.setProps({
+      threshold: palette.bloom.threshold,
+      intensity: palette.bloom.intensity,
+      radius: palette.bloom.radius,
+    });
+    vignetteEffect.setProps({
+      radius: palette.vignette.radius,
+      amount: palette.vignette.amount,
+    });
+    chromaticEffect.setProps({ amount: palette.chromaticAberration });
+
+    // Lighting intensities
+    ambientLight.intensity = palette.lighting.ambientIntensity;
+    primaryLight.intensity = palette.lighting.primaryIntensity;
+    fillLight.intensity = palette.lighting.fillIntensity;
+  }
+
+  return { effects, setDecadeGrade, setTheme };
 }

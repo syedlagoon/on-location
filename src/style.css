@@ -92,6 +92,251 @@
 }
 
 
+/* --- Day theme overrides --- */
+
+[data-theme="day"] {
+  --color-bg: #f5f3ee;
+  --color-fg: #1a1a1a;
+  --color-fg-muted: rgba(26, 26, 26, 0.55);
+  --color-fg-subtle: rgba(26, 26, 26, 0.35);
+
+  --color-accent: #c45a20;
+  --color-accent-hover: #d96a2a;
+  --color-accent-subtle: rgba(196, 90, 32, 0.12);
+  --color-accent-border: rgba(196, 90, 32, 0.35);
+
+  --color-surface: rgba(255, 255, 255, 0.78);
+  --color-surface-solid: rgba(250, 248, 244, 0.96);
+  --color-surface-hover: rgba(0, 0, 0, 0.05);
+  --color-surface-active: rgba(0, 0, 0, 0.09);
+
+  --color-border: rgba(0, 0, 0, 0.10);
+  --color-border-strong: rgba(0, 0, 0, 0.18);
+  --color-border-accent: rgba(196, 90, 32, 0.5);
+
+  --color-data-low: rgb(20, 70, 120);
+  --color-data-high: rgb(170, 30, 20);
+
+  --shadow-panel: 0 4px 24px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --shadow-pill: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 0 12px rgba(196, 90, 32, 0.10);
+}
+
+/* Day theme: legend gradient */
+[data-theme="day"] #legend-gradient {
+  background: linear-gradient(
+    to top,
+    var(--color-data-low) 0%,
+    rgb(0, 140, 130) 25%,
+    rgb(220, 120, 20) 50%,
+    rgb(210, 60, 30) 75%,
+    var(--color-data-high) 100%
+  );
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Day theme: notch bar colors */
+[data-theme="day"] .notch {
+  background: rgba(0, 0, 0, 0.10);
+}
+
+[data-theme="day"] .notch:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="day"] .notch-active {
+  background: var(--color-accent);
+  box-shadow: 0 0 8px rgba(196, 90, 32, 0.30),
+              0 0 2px rgba(196, 90, 32, 0.60);
+}
+
+[data-theme="day"] .notch-active:hover {
+  background: var(--color-accent-hover);
+}
+
+@keyframes notchPulseDay {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(196, 90, 32, 0.30), 0 0 2px rgba(196, 90, 32, 0.60);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(196, 90, 32, 0.45), 0 0 4px rgba(196, 90, 32, 0.75);
+  }
+}
+
+[data-theme="day"] .notch-active {
+  animation: notchPulseDay 2s ease-in-out infinite;
+}
+
+/* Day theme: scrollbar colors */
+[data-theme="day"] #detail-panel::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="day"] #detail-panel::-webkit-scrollbar-thumb {
+  background: rgba(196, 90, 32, 0.25);
+}
+
+[data-theme="day"] #detail-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(196, 90, 32, 0.4);
+}
+
+[data-theme="day"] #detail-panel {
+  scrollbar-color: rgba(196, 90, 32, 0.25) rgba(0, 0, 0, 0.03);
+}
+
+/* Day theme: selection color */
+[data-theme="day"] ::selection {
+  background: rgba(196, 90, 32, 0.2);
+  color: var(--color-fg);
+}
+
+/* Day theme: attribution link hover */
+[data-theme="day"] #attribution a {
+  border-bottom-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="day"] #attribution a:hover {
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Day theme: detail panel accent line */
+[data-theme="day"] #detail-panel::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(196, 90, 32, 0.5) 0%,
+    rgba(196, 90, 32, 0.15) 40%,
+    transparent 80%
+  );
+}
+
+/* Day theme: pill glow */
+[data-theme="day"] .cat-pill.cat-active {
+  animation: pillGlowDay 2.5s ease-in-out infinite;
+}
+
+@keyframes pillGlowDay {
+  0%, 100% { box-shadow: var(--shadow-pill), 0 0 6px rgba(196, 90, 32, 0.08); }
+  50% { box-shadow: var(--shadow-pill), 0 0 10px rgba(196, 90, 32, 0.15); }
+}
+
+/* Day theme: text shadow adjustments (less needed on light bg) */
+[data-theme="day"] #title-overlay h1 {
+  text-shadow: 0 1px 8px rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="day"] #title-overlay p,
+[data-theme="day"] #caption {
+  text-shadow: none;
+}
+
+/* Day theme: sparkline */
+[data-theme="day"] .detail-sparkline {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* Day theme: detail panel big stat glow */
+[data-theme="day"] .detail-big {
+  text-shadow: none;
+}
+
+/* Day theme: detail panel box shadow */
+[data-theme="day"] #detail-panel {
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* Day theme: hero accent glow */
+[data-theme="day"] .hero-accent {
+  box-shadow: 0 0 16px rgba(196, 90, 32, 0.15);
+}
+
+/* Day theme: toolbar inset highlight */
+[data-theme="day"] #toolbar {
+  box-shadow: var(--shadow-panel), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Day theme: category pills — use dark text on light surface */
+[data-theme="day"] .cat-pill {
+  color: rgba(26, 26, 26, 0.7);
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="day"] .cat-pill:hover {
+  color: var(--color-fg);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Day theme: category-active pills — keep category colors but with
+   opaque-enough backgrounds for readability on light surface */
+[data-theme="day"] .cat-pill[data-cat="Television"].cat-active { color: #3a78b0; border-color: rgba(58, 120, 176, 0.45); background: rgba(58, 120, 176, 0.10); }
+[data-theme="day"] .cat-pill[data-cat="Film"].cat-active { color: #c04040; border-color: rgba(192, 64, 64, 0.45); background: rgba(192, 64, 64, 0.10); }
+[data-theme="day"] .cat-pill[data-cat="Commercial"].cat-active { color: #5a9040; border-color: rgba(90, 144, 64, 0.45); background: rgba(90, 144, 64, 0.10); }
+[data-theme="day"] .cat-pill[data-cat="Theater"].cat-active { color: #a05580; border-color: rgba(160, 85, 128, 0.45); background: rgba(160, 85, 128, 0.10); }
+[data-theme="day"] .cat-pill[data-cat="Web"].cat-active { color: #6a58a8; border-color: rgba(106, 88, 168, 0.45); background: rgba(106, 88, 168, 0.10); }
+[data-theme="day"] .cat-pill[data-cat="Still Photography"].cat-active { color: #c08030; border-color: rgba(192, 128, 48, 0.45); background: rgba(192, 128, 48, 0.10); }
+[data-theme="day"] .cat-pill[data-cat="Music Video"].cat-active { color: #4a8090; border-color: rgba(74, 128, 144, 0.45); background: rgba(74, 128, 144, 0.10); }
+[data-theme="day"] .cat-pill[data-cat="Documentary"].cat-active { color: #4070c0; border-color: rgba(64, 112, 192, 0.45); background: rgba(64, 112, 192, 0.10); }
+[data-theme="day"] .cat-pill[data-cat="Student"].cat-active { color: #a07040; border-color: rgba(160, 112, 64, 0.45); background: rgba(160, 112, 64, 0.10); }
+
+/* Day theme: decade pills — dark text on light surface */
+[data-theme="day"] .decade-pill {
+  color: rgba(26, 26, 26, 0.55);
+}
+
+[data-theme="day"] .decade-pill:hover {
+  color: var(--color-fg);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="day"] .decade-pill.decade-active {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent-border);
+}
+
+/* Day theme: toolbar toggle pills — ensure dark text */
+[data-theme="day"] .toolbar-toggle {
+  color: rgba(26, 26, 26, 0.55);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="day"] .toolbar-toggle:hover {
+  color: var(--color-fg);
+  border-color: rgba(0, 0, 0, 0.30);
+}
+
+[data-theme="day"] .toolbar-toggle.toggle-active {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent-border);
+}
+
+/* Day theme: diary toggle active — green stays readable on light */
+[data-theme="day"] .toolbar-toggle.toggle-active-diary {
+  color: #008a38;
+  background: rgba(0, 138, 56, 0.08);
+  border-color: rgba(0, 138, 56, 0.35);
+}
+
+/* Day theme: mobile detail panel shadow */
+@media (max-width: 600px) {
+  [data-theme="day"] #detail-panel {
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Mobile: top-edge accent on day */
+  [data-theme="day"] #detail-panel::before {
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(196, 90, 32, 0.35) 30%,
+      rgba(196, 90, 32, 0.35) 70%,
+      transparent 100%
+    );
+  }
+}
+
+
 /* --- Reset --- */
 
 *,
@@ -513,7 +758,7 @@ body {
 
 #legend {
   position: fixed;
-  bottom: 100px;
+  bottom: var(--space-lg);
   left: var(--space-xl);
   z-index: 3;
   pointer-events: none;

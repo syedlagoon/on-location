@@ -4,6 +4,8 @@ import type { MapViewState } from "@deck.gl/core";
 import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 import { createEffectsSystem } from "./effects";
+import { THEMES } from "./theme";
+import type { ThemeName, ThemePalette } from "./theme";
 import type { Feature, FeatureCollection, Geometry, Position, Polygon, MultiPolygon } from "geojson";
 
 // --- Types ---
@@ -460,15 +462,13 @@ const HERO_VIEW_STATE = {
 };
 
 const ELEVATION_SCALE = 150;
-/** Multi-stop color scale: dark indigo -> deep purple -> warm brick -> orange -> bright amber.
- *  More perceptually distinct than a simple 2-point lerp which produces muddy mid-tones. */
-const COLOR_STOPS: [number, [number, number, number]][] = [
-  [0.0,  [80, 50, 110]],    // muted purple (visible on dark map)
-  [0.25, [130, 50, 120]],   // purple-magenta
-  [0.5,  [190, 80, 60]],    // warm brick
-  [0.75, [240, 150, 40]],   // orange
-  [1.0,  [255, 215, 70]],   // bright amber
-];
+
+// --- Theme state ---
+// Initialized from localStorage (or defaults to "night").
+// Updated via applyTheme() which also sets CSS data-theme and rebuilds layers.
+let currentThemeName: ThemeName =
+  (localStorage.getItem("theme") as ThemeName | null) === "day" ? "day" : "night";
+let currentTheme: ThemePalette = THEMES[currentThemeName];
 
 // --- Helpers ---
 
@@ -556,15 +556,16 @@ function getColor(
   count: number,
   maxCount: number,
 ): [number, number, number, number] {
-  if (maxCount === 0 || count === 0) return [30, 30, 70, 255];
+  if (maxCount === 0 || count === 0) return currentTheme.zeroCount;
   const t = count / maxCount;
 
+  const stops = currentTheme.colorStops;
   // Find the two stops we're between
-  let lo = COLOR_STOPS[0], hi = COLOR_STOPS[COLOR_STOPS.length - 1];
-  for (let i = 0; i < COLOR_STOPS.length - 1; i++) {
-    if (t >= COLOR_STOPS[i][0] && t <= COLOR_STOPS[i + 1][0]) {
-      lo = COLOR_STOPS[i];
-      hi = COLOR_STOPS[i + 1];
+  let lo = stops[0], hi = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (t >= stops[i][0] && t <= stops[i + 1][0]) {
+      lo = stops[i];
+      hi = stops[i + 1];
       break;
     }
   }
@@ -967,8 +968,16 @@ async function main(): Promise<void> {
     diaryRow.classList.add("toolbar-row-diary");
   }
 
+  // --- Theme toggle row ---
+  const { row: themeRow, toggle: themeToggle } = createToolbarRow(
+    "Theme",
+    "Night or day color mode",
+    currentThemeName === "night" ? "Night" : "Day",
+    "Toggle theme",
+  );
+
   // Assemble toolbar
-  toolbar.append(unitRow, vizRow, typeRow, typeExpandable);
+  toolbar.append(themeRow, unitRow, vizRow, typeRow, typeExpandable);
   if (landmarksRow && landmarksExpandable) {
     toolbar.append(landmarksRow, landmarksExpandable);
     // Diary is a sub-section of landmarks, inside the expandable
@@ -1402,17 +1411,12 @@ async function main(): Promise<void> {
   function buildBaseLayer(unit: UnitMode): GeoJsonLayer {
     const data = unit === "cd" ? cdBoundaries : zipBoundaries;
 
-    // Dark navy fill — slightly lighter than the page background (#0a0a0a)
-    // to make the NYC landmass visible against the void. The indigo tint
-    // (blue channel higher) gives a subtle geographic feel.
-    const fillColor: [number, number, number, number] = [12, 12, 28, 180];
+    const fillColor: [number, number, number, number] = currentTheme.baseFill;
 
-    // Border lines — thin white at low opacity, matching the design system's
-    // --color-border (rgba 255,255,255 @ 0.08–0.15). Zip codes get slightly
-    // more transparent borders since there are many more of them (~180 vs ~59).
+    // Border lines — zip codes get slightly more transparent borders since
+    // there are many more of them (~180 vs ~59).
     const lineColor: [number, number, number, number] =
-      unit === "cd" ? [255, 255, 255, 38] : [255, 255, 255, 25];
-    //                 ~0.15 opacity (CD)    ~0.10 opacity (ZIP)
+      unit === "cd" ? currentTheme.baseLine_cd : currentTheme.baseLine_zip;
 
     // Line width: CDs get 1px borders, ZIPs get 0.5px to avoid visual noise
     // from the denser zip-code grid.
@@ -1433,10 +1437,8 @@ async function main(): Promise<void> {
       getLineColor: lineColor,
       lineWidthMinPixels: lineWidth,
       updateTriggers: {
-        // Rebuild when unit changes — different boundary GeoJSON,
-        // different line colors, and different line widths.
-        getFillColor: [unit],
-        getLineColor: [unit],
+        getFillColor: [unit, currentThemeName],
+        getLineColor: [unit, currentThemeName],
       },
     });
   }
@@ -1460,7 +1462,7 @@ async function main(): Promise<void> {
       wireframe: false,
       pickable: true,
       autoHighlight: true,
-      highlightColor: [255, 255, 255, 40],
+      highlightColor: currentTheme.highlightColor,
       getElevation: (f: AreaFeature) => {
         const resolved = resolveFeature(f, unit);
         if (!resolved) return 0;
@@ -1476,11 +1478,11 @@ async function main(): Promise<void> {
           : 0;
         return getColor(count, maxCount);
       },
-      getLineColor: [80, 80, 100, 200],
-      material: { ambient: 0.35, diffuse: 0.8, shininess: 12 },
+      getLineColor: currentTheme.barLineColor,
+      material: currentTheme.material,
       updateTriggers: {
         getElevation: [month, unit, catTrigger],
-        getFillColor: [month, unit, catTrigger],
+        getFillColor: [month, unit, catTrigger, currentThemeName],
       },
       transitions: {
         getElevation: { duration: 700, easing: (t: number) => 1 - Math.pow(1 - t, 3) },
@@ -1519,12 +1521,12 @@ async function main(): Promise<void> {
         return MIN_RADIUS + Math.sqrt(d.count / maxCount) * (MAX_RADIUS - MIN_RADIUS);
       },
       getFillColor: (d: CircleDataPoint) => getColor(d.count, maxCount),
-      getLineColor: [255, 255, 255, 80],
+      getLineColor: currentTheme.circleLineColor,
       lineWidthMinPixels: 1,
       radiusUnits: "meters" as const,
       updateTriggers: {
         getRadius: [month, unit, categoryTrigger()],
-        getFillColor: [month, unit, categoryTrigger()],
+        getFillColor: [month, unit, categoryTrigger(), currentThemeName],
       },
       transitions: {
         getRadius: { duration: 800, easing: (t: number) => t < 1 ? 1 - Math.pow(1 - t, 4) : 1 },
@@ -1563,14 +1565,7 @@ async function main(): Promise<void> {
       radiusPixels: 40,
       intensity: 1,
       threshold: 0.05,
-      colorRange: [
-        [80, 50, 110],     // muted purple
-        [130, 50, 120],    // purple-magenta
-        [190, 80, 60],     // warm brick
-        [240, 150, 40],    // orange
-        [255, 215, 70],    // bright amber
-        [255, 240, 140],   // light amber (glow)
-      ],
+      colorRange: currentTheme.heatmapColorRange,
     });
   }
 
@@ -1724,6 +1719,9 @@ async function main(): Promise<void> {
   const effectsSystem = createEffectsSystem();
   // Apply initial decade grading if restored from URL hash
   effectsSystem.setDecadeGrade(currentDecade);
+  // Apply initial theme (night/day from localStorage)
+  effectsSystem.setTheme(currentThemeName);
+  document.documentElement.dataset.theme = currentThemeName;
 
   const deck = new Deck({
     parent: document.querySelector<HTMLDivElement>("#app")!,
@@ -2158,8 +2156,8 @@ async function main(): Promise<void> {
         pickable: false,
         stroked: true,
         filled: true,
-        getFillColor: [8, 8, 16, 160],
-        getLineColor: [255, 255, 255, 15],
+        getFillColor: currentTheme.baseDimmed,
+        getLineColor: currentTheme.baseDimmedLine,
         lineWidthMinPixels: 0.5,
       });
       const diaryLayers = buildDiaryLayers();
@@ -2206,6 +2204,23 @@ async function main(): Promise<void> {
 
     debouncedUpdateHash();
   }
+
+  // --- Theme toggle ---
+  function applyTheme(name: ThemeName): void {
+    currentThemeName = name;
+    currentTheme = THEMES[name];
+    document.documentElement.dataset.theme = name;
+    effectsSystem.setTheme(name);
+    localStorage.setItem("theme", name);
+    updateLayers();
+  }
+
+  themeToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const next: ThemeName = currentThemeName === "night" ? "day" : "night";
+    themeToggle.textContent = next === "night" ? "Night" : "Day";
+    applyTheme(next);
+  });
 
   // --- Unit toggle ---
   unitToggle.addEventListener("click", (e) => {
