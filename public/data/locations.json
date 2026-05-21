@@ -1,0 +1,3235 @@
+{
+  "metadata": {
+    "generatedAt": "2026-05-20T19:31:44.397Z",
+    "totalLocations": 110,
+    "totalFilms": 168,
+    "enrichedAt": "2026-05-20T19:32:55.737Z",
+    "enrichedFilms": 168
+  },
+  "locations": [
+    {
+      "locationId": "Q284013",
+      "name": "1 Wall Street Court",
+      "lat": 40.70522,
+      "lng": -74.00857,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10005",
+      "films": [
+        {
+          "filmId": "Q21451640",
+          "title": "John Wick: Chapter 2",
+          "year": 2017,
+          "type": "film",
+          "director": "Chad Stahelski",
+          "genres": [
+            "action film",
+            "crime film",
+            "neo-noir",
+            "splatter film",
+            "thriller film",
+            "vigilante film"
+          ],
+          "imdbId": "tt4425200"
+        }
+      ]
+    },
+    {
+      "locationId": "Q2943880",
+      "name": "1211 Avenue of the Americas",
+      "lat": 40.758611111,
+      "lng": -73.982222222,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10036",
+      "films": [
+        {
+          "filmId": "Q5476534",
+          "title": "Fox & Friends",
+          "year": 1998,
+          "type": "tv",
+          "genres": [
+            "news program",
+            "talk show"
+          ],
+          "imdbId": "tt0185065",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Fox%20and%20Friends.png?width=300"
+        },
+        {
+          "filmId": "Q116858817",
+          "title": "Fox & Friends Weekend",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "talk show"
+          ]
+        },
+        {
+          "filmId": "Q106511645",
+          "title": "The Faulkner Focus",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "news program",
+            "talk show"
+          ],
+          "imdbId": "tt13852906",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Harris%20Faulkner%20in%20Half%20Moone%20Cruise%20Terminal.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1050074",
+      "name": "28 Liberty Street",
+      "lat": 40.707777777,
+      "lng": -74.008888888,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10005",
+      "films": [
+        {
+          "filmId": "Q182212",
+          "title": "Spider-Man 3",
+          "year": 2007,
+          "type": "film",
+          "director": "Sam Raimi",
+          "genres": [
+            "action film",
+            "drama film",
+            "science fiction film",
+            "superhero film",
+            "thriller film"
+          ],
+          "imdbId": "tt0413300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q680614",
+      "name": "30 Rockefeller Plaza",
+      "lat": 40.75897222,
+      "lng": -73.97938889,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q492089",
+          "title": "The Adjustment Bureau",
+          "year": 2011,
+          "type": "film",
+          "director": "George Nolfi",
+          "genres": [
+            "action film",
+            "fantasy film",
+            "romance film",
+            "science fiction film",
+            "thriller film"
+          ],
+          "imdbId": "tt1385826"
+        },
+        {
+          "filmId": "Q6952780",
+          "title": "NBC News at Sunrise",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "news program"
+          ],
+          "imdbId": "tt0450224"
+        }
+      ]
+    },
+    {
+      "locationId": "Q4640603",
+      "name": "55 Central Park West",
+      "lat": 40.772222222,
+      "lng": -73.978888888,
+      "cdKey": "Manhattan-7",
+      "zipKey": "10023",
+      "films": [
+        {
+          "filmId": "Q108745",
+          "title": "Ghostbusters",
+          "year": 1984,
+          "type": "film",
+          "director": "Ivan Reitman",
+          "genres": [
+            "action film",
+            "adventure film",
+            "buddy film",
+            "comedy film",
+            "comedy horror",
+            "fantasy film",
+            "ghost film",
+            "monster film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0087332",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ghostbusers%20Logo.svg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q2982354",
+      "name": "59th Street–Columbus Circle",
+      "lat": 40.768055555,
+      "lng": -73.981944444,
+      "cdKey": "Manhattan-4",
+      "zipKey": "99999",
+      "films": [
+        {
+          "filmId": "Q490464",
+          "title": "Enchanted",
+          "year": 2007,
+          "type": "film",
+          "director": "Kevin Lima",
+          "genres": [
+            "comedy film",
+            "family film",
+            "fantasy film",
+            "live-action/animated film",
+            "musical film",
+            "romantic comedy"
+          ],
+          "imdbId": "tt0461770",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/116BtwBdwyRSD.jpg?width=300"
+        },
+        {
+          "filmId": "Q615254",
+          "title": "Crocodile Dundee",
+          "year": 1986,
+          "type": "film",
+          "director": "Peter Faiman",
+          "genres": [
+            "adventure film",
+            "romantic comedy film"
+          ],
+          "imdbId": "tt0090555"
+        }
+      ]
+    },
+    {
+      "locationId": "Q2068997",
+      "name": "Alexander Hamilton U.S. Custom House",
+      "lat": 40.704294,
+      "lng": -74.013773,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10004",
+      "films": [
+        {
+          "filmId": "Q492214",
+          "title": "Ghostbusters II",
+          "year": 1989,
+          "type": "film",
+          "director": "Ivan Reitman",
+          "genres": [
+            "comedy film",
+            "comedy horror",
+            "fantasy film",
+            "ghost film",
+            "monster film",
+            "science fiction comedy",
+            "science fiction film"
+          ],
+          "imdbId": "tt0097428"
+        }
+      ]
+    },
+    {
+      "locationId": "Q619124",
+      "name": "Apollo Theater",
+      "lat": 40.809932,
+      "lng": -73.950113,
+      "cdKey": "Manhattan-10",
+      "zipKey": "10027",
+      "films": [
+        {
+          "filmId": "Q940139",
+          "title": "Get Him to the Greek",
+          "year": 2010,
+          "type": "film",
+          "director": "Nicholas Stoller",
+          "genres": [
+            "comedy film"
+          ],
+          "imdbId": "tt1226229",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Get%20Him%20to%20the%20Greek%20Cavendish%20Square.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q121765",
+      "name": "Astoria",
+      "lat": 40.766944444,
+      "lng": -73.921388888,
+      "cdKey": "Queens-1",
+      "zipKey": "11102",
+      "films": [
+        {
+          "filmId": "Q23010088",
+          "title": "Spider-Man: Homecoming",
+          "year": 2017,
+          "type": "film",
+          "director": "Jon Watts",
+          "genres": [
+            "action film",
+            "superhero film"
+          ],
+          "imdbId": "tt2250912"
+        }
+      ]
+    },
+    {
+      "locationId": "Q264186",
+      "name": "Beacon Theatre",
+      "lat": 40.7805,
+      "lng": -73.98108,
+      "cdKey": "Manhattan-7",
+      "zipKey": "10023",
+      "films": [
+        {
+          "filmId": "Q106238425",
+          "title": "40",
+          "year": 2014,
+          "type": "film"
+        },
+        {
+          "filmId": "Q940139",
+          "title": "Get Him to the Greek",
+          "year": 2010,
+          "type": "film",
+          "director": "Nicholas Stoller",
+          "genres": [
+            "comedy film"
+          ],
+          "imdbId": "tt1226229",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Get%20Him%20to%20the%20Greek%20Cavendish%20Square.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q2616330",
+      "name": "Bedford Park Boulevard",
+      "lat": 40.8725,
+      "lng": -73.8879,
+      "cdKey": "Bronx-7",
+      "zipKey": "10468",
+      "films": [
+        {
+          "filmId": "Q42759035",
+          "title": "Joker",
+          "year": 2019,
+          "type": "film",
+          "director": "Todd Phillips",
+          "genres": [
+            "crime film",
+            "drama film",
+            "psychological thriller film",
+            "thriller film"
+          ],
+          "imdbId": "tt7286456"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1156982",
+      "name": "Bedford–Stuyvesant",
+      "lat": 40.683333333,
+      "lng": -73.941111111,
+      "cdKey": "Brooklyn-3",
+      "zipKey": "11216",
+      "films": [
+        {
+          "filmId": "Q116921552",
+          "title": "Inside Bedford-Stuyvesant",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "television documentary"
+          ],
+          "imdbId": "tt11834488"
+        }
+      ]
+    },
+    {
+      "locationId": "Q2894927",
+      "name": "Bellevue Hospital Center",
+      "lat": 40.7393,
+      "lng": -73.9753,
+      "cdKey": "Manhattan-6",
+      "zipKey": "10016",
+      "films": [
+        {
+          "filmId": "Q53582170",
+          "title": "New Amsterdam",
+          "year": null,
+          "type": "tv",
+          "director": "David Schulner",
+          "genres": [
+            "drama film",
+            "medical drama"
+          ],
+          "imdbId": "tt7817340"
+        }
+      ]
+    },
+    {
+      "locationId": "Q885822",
+      "name": "Blue Note Jazz Club",
+      "lat": 40.730833333,
+      "lng": -74.000833333,
+      "cdKey": "Manhattan-2",
+      "zipKey": "10012",
+      "films": [
+        {
+          "filmId": "Q60997434",
+          "title": "Little Glee Monster MTV Unplugged",
+          "year": 2018,
+          "type": "film",
+          "genres": [
+            "J-pop"
+          ]
+        }
+      ]
+    },
+    {
+      "locationId": "Q4950616",
+      "name": "Bow Bridge, Central Park",
+      "lat": 40.7758,
+      "lng": -73.9718,
+      "cdKey": null,
+      "zipKey": "99999",
+      "films": [
+        {
+          "filmId": "Q20950014",
+          "title": "Café Society",
+          "year": 2016,
+          "type": "film",
+          "director": "Woody Allen",
+          "genres": [
+            "comedy drama",
+            "comedy film"
+          ],
+          "imdbId": "tt4513674",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Cannes%202016%201.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q125006",
+      "name": "Brooklyn Bridge",
+      "lat": 40.705666666,
+      "lng": -73.996333333,
+      "cdKey": null,
+      "zipKey": null,
+      "films": [
+        {
+          "filmId": "Q490464",
+          "title": "Enchanted",
+          "year": 2007,
+          "type": "film",
+          "director": "Kevin Lima",
+          "genres": [
+            "comedy film",
+            "family film",
+            "fantasy film",
+            "live-action/animated film",
+            "musical film",
+            "romantic comedy"
+          ],
+          "imdbId": "tt0461770",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/116BtwBdwyRSD.jpg?width=300"
+        },
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        }
+      ]
+    },
+    {
+      "locationId": "Q2288728",
+      "name": "Bushwick",
+      "lat": 40.694166666,
+      "lng": -73.918611111,
+      "cdKey": "Brooklyn-4",
+      "zipKey": "11221",
+      "films": [
+        {
+          "filmId": "Q108803630",
+          "title": "Kaleidoscope",
+          "year": null,
+          "type": "tv",
+          "director": "Robert Townsend",
+          "genres": [
+            "action film",
+            "crime thriller film",
+            "drama film"
+          ],
+          "imdbId": "tt15438246"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1043965",
+      "name": "Carnegie Hill",
+      "lat": 40.784722222,
+      "lng": -73.956111111,
+      "cdKey": "Manhattan-8",
+      "zipKey": "10128",
+      "films": [
+        {
+          "filmId": "Q940139",
+          "title": "Get Him to the Greek",
+          "year": 2010,
+          "type": "film",
+          "director": "Nicholas Stoller",
+          "genres": [
+            "comedy film"
+          ],
+          "imdbId": "tt1226229",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Get%20Him%20to%20the%20Greek%20Cavendish%20Square.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q5009232",
+      "name": "CBS Broadcast Center",
+      "lat": 40.76916667,
+      "lng": -73.99,
+      "cdKey": "Manhattan-4",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q22022577",
+          "title": "Full Frontal with Samantha Bee",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "comedy television series"
+          ],
+          "imdbId": "tt5323988",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Full%20Frontal%20with%20Samantha%20Bee.png?width=300"
+        },
+        {
+          "filmId": "Q16735585",
+          "title": "Last Week Tonight with John Oliver",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "comedy television series",
+            "current affairs",
+            "late-night talk show",
+            "political satire"
+          ],
+          "imdbId": "tt3530232"
+        }
+      ]
+    },
+    {
+      "locationId": "Q160409",
+      "name": "Central Park",
+      "lat": 40.7825,
+      "lng": -73.966111111,
+      "cdKey": null,
+      "zipKey": "99999",
+      "films": [
+        {
+          "filmId": "Q753517",
+          "title": "Limitless",
+          "year": 2011,
+          "type": "film",
+          "director": "Neil Burger",
+          "genres": [
+            "action film",
+            "drama film",
+            "science fiction film",
+            "thriller film"
+          ],
+          "imdbId": "tt1219289"
+        },
+        {
+          "filmId": "Q490464",
+          "title": "Enchanted",
+          "year": 2007,
+          "type": "film",
+          "director": "Kevin Lima",
+          "genres": [
+            "comedy film",
+            "family film",
+            "fantasy film",
+            "live-action/animated film",
+            "musical film",
+            "romantic comedy"
+          ],
+          "imdbId": "tt0461770",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/116BtwBdwyRSD.jpg?width=300"
+        },
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        },
+        {
+          "filmId": "Q328695",
+          "title": "Superman Returns",
+          "year": 2006,
+          "type": "film",
+          "director": "Bryan Singer",
+          "genres": [
+            "action film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0348150"
+        },
+        {
+          "filmId": "Q615254",
+          "title": "Crocodile Dundee",
+          "year": 1986,
+          "type": "film",
+          "director": "Peter Faiman",
+          "genres": [
+            "adventure film",
+            "romantic comedy film"
+          ],
+          "imdbId": "tt0090555"
+        },
+        {
+          "filmId": "Q3835364",
+          "title": "Live in Central Park",
+          "year": 1980,
+          "type": "film",
+          "genres": [
+            "rock music"
+          ],
+          "imdbId": "tt0473030"
+        }
+      ]
+    },
+    {
+      "locationId": "Q2738041",
+      "name": "Central Park West",
+      "lat": 40.7847,
+      "lng": -73.9699,
+      "cdKey": "Manhattan-7",
+      "zipKey": "10024",
+      "films": [
+        {
+          "filmId": "Q940139",
+          "title": "Get Him to the Greek",
+          "year": 2010,
+          "type": "film",
+          "director": "Nicholas Stoller",
+          "genres": [
+            "comedy film"
+          ],
+          "imdbId": "tt1226229",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Get%20Him%20to%20the%20Greek%20Cavendish%20Square.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1069129",
+      "name": "Chelsea",
+      "lat": 40.746388888,
+      "lng": -74.001388888,
+      "cdKey": "Manhattan-4",
+      "zipKey": "10011",
+      "films": [
+        {
+          "filmId": "Q484675",
+          "title": "Léon: The Professional",
+          "year": 1994,
+          "type": "film",
+          "director": "Luc Besson",
+          "genres": [
+            "action film",
+            "buddy film",
+            "crime film",
+            "crime thriller film",
+            "drama film",
+            "gangster film",
+            "mystery film"
+          ],
+          "imdbId": "tt0110413",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Leon%20the%20Professional.png?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q866332",
+      "name": "Chinatown",
+      "lat": 40.714722222,
+      "lng": -73.997222222,
+      "cdKey": "Manhattan-3",
+      "zipKey": "10013",
+      "films": [
+        {
+          "filmId": "Q484675",
+          "title": "Léon: The Professional",
+          "year": 1994,
+          "type": "film",
+          "director": "Luc Besson",
+          "genres": [
+            "action film",
+            "buddy film",
+            "crime film",
+            "crime thriller film",
+            "drama film",
+            "gangster film",
+            "mystery film"
+          ],
+          "imdbId": "tt0110413",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Leon%20the%20Professional.png?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q5123248",
+      "name": "City Island",
+      "lat": 40.847219444,
+      "lng": -73.786111111,
+      "cdKey": "Bronx-10",
+      "zipKey": "10464",
+      "films": [
+        {
+          "filmId": "Q1916959",
+          "title": "City Island",
+          "year": 2009,
+          "type": "film",
+          "director": "Raymond De Felitta",
+          "genres": [
+            "comedy film",
+            "drama film"
+          ],
+          "imdbId": "tt1174730"
+        },
+        {
+          "filmId": "Q126637",
+          "title": "Wedding Daze",
+          "year": 2006,
+          "type": "film",
+          "director": "Michael Ian Black",
+          "genres": [
+            "romantic comedy film"
+          ],
+          "imdbId": "tt0484877"
+        }
+      ]
+    },
+    {
+      "locationId": "Q49088",
+      "name": "Columbia University",
+      "lat": 40.8075,
+      "lng": -73.961944444,
+      "cdKey": "Manhattan-9",
+      "zipKey": "10027",
+      "films": [
+        {
+          "filmId": "Q30203425",
+          "title": "The Post",
+          "year": 2017,
+          "type": "film",
+          "director": "Steven Spielberg",
+          "genres": [
+            "biographical film",
+            "drama film",
+            "historical film",
+            "political thriller",
+            "thriller film"
+          ],
+          "imdbId": "tt6294822"
+        }
+      ]
+    },
+    {
+      "locationId": "Q628201",
+      "name": "Coney Island",
+      "lat": 40.575,
+      "lng": -73.9825,
+      "cdKey": "Brooklyn-13",
+      "zipKey": "11224",
+      "films": [
+        {
+          "filmId": "Q27958394",
+          "title": "Wonder",
+          "year": 2017,
+          "type": "film",
+          "director": "Stephen Chbosky",
+          "genres": [
+            "drama film"
+          ],
+          "imdbId": "tt2543472"
+        },
+        {
+          "filmId": "Q18844729",
+          "title": "Mr. Robot",
+          "year": null,
+          "type": "tv",
+          "director": "Sam Esmail",
+          "genres": [
+            "LGBT-related television series",
+            "drama television series",
+            "psychological thriller",
+            "techno-thriller"
+          ],
+          "imdbId": "tt4158110"
+        }
+      ]
+    },
+    {
+      "locationId": "Q796480",
+      "name": "Convent of the Sacred Heart",
+      "lat": 40.7847,
+      "lng": -73.9575,
+      "cdKey": "Manhattan-8",
+      "zipKey": "10128",
+      "films": [
+        {
+          "filmId": "Q1192193",
+          "title": "The Anderson Tapes",
+          "year": 1971,
+          "type": "film",
+          "director": "Sidney Lumet",
+          "genres": [
+            "crime film",
+            "drama film",
+            "heist film"
+          ],
+          "imdbId": "tt0066767",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Der%20anderson%20clan.svg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1264951",
+      "name": "Dumbo",
+      "lat": 40.703055555,
+      "lng": -73.989444444,
+      "cdKey": "Brooklyn-2",
+      "zipKey": "11201",
+      "films": [
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1069687",
+      "name": "East Harlem",
+      "lat": 40.798611111,
+      "lng": -73.941666666,
+      "cdKey": "Manhattan-11",
+      "zipKey": "10029",
+      "films": [
+        {
+          "filmId": "Q484675",
+          "title": "Léon: The Professional",
+          "year": 1994,
+          "type": "film",
+          "director": "Luc Besson",
+          "genres": [
+            "action film",
+            "buddy film",
+            "crime film",
+            "crime thriller film",
+            "drama film",
+            "gangster film",
+            "mystery film"
+          ],
+          "imdbId": "tt0110413",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Leon%20the%20Professional.png?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q212862",
+      "name": "East River",
+      "lat": 40.786944444,
+      "lng": -73.9175,
+      "cdKey": null,
+      "zipKey": null,
+      "films": [
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1043326",
+      "name": "East Village",
+      "lat": 40.7275,
+      "lng": -73.98583333,
+      "cdKey": "Manhattan-3",
+      "zipKey": "10003",
+      "films": [
+        {
+          "filmId": "Q615254",
+          "title": "Crocodile Dundee",
+          "year": 1986,
+          "type": "film",
+          "director": "Peter Faiman",
+          "genres": [
+            "adventure film",
+            "romantic comedy film"
+          ],
+          "imdbId": "tt0090555"
+        }
+      ]
+    },
+    {
+      "locationId": "Q9188",
+      "name": "Empire State Building",
+      "lat": 40.748333333,
+      "lng": -73.985555555,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10001",
+      "films": [
+        {
+          "filmId": "Q46124197",
+          "title": "Soul Mates",
+          "year": 2007,
+          "type": "film",
+          "genres": [
+            "romance film"
+          ],
+          "imdbId": "tt7260970"
+        }
+      ]
+    },
+    {
+      "locationId": "Q109858",
+      "name": "Fifth Avenue",
+      "lat": 40.774078,
+      "lng": -73.965863,
+      "cdKey": null,
+      "zipKey": "99999",
+      "films": [
+        {
+          "filmId": "Q615254",
+          "title": "Crocodile Dundee",
+          "year": 1986,
+          "type": "film",
+          "director": "Peter Faiman",
+          "genres": [
+            "adventure film",
+            "romantic comedy film"
+          ],
+          "imdbId": "tt0090555"
+        }
+      ]
+    },
+    {
+      "locationId": "Q21712009",
+      "name": "Firehouse, Hook & Ladder Company 8",
+      "lat": 40.7196,
+      "lng": -74.0066,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10013",
+      "films": [
+        {
+          "filmId": "Q108745",
+          "title": "Ghostbusters",
+          "year": 1984,
+          "type": "film",
+          "director": "Ivan Reitman",
+          "genres": [
+            "action film",
+            "adventure film",
+            "buddy film",
+            "comedy film",
+            "comedy horror",
+            "fantasy film",
+            "ghost film",
+            "monster film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0087332",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ghostbusers%20Logo.svg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q745296",
+      "name": "Flushing Meadows–Corona Park",
+      "lat": 40.743746,
+      "lng": -73.84479,
+      "cdKey": null,
+      "zipKey": "11368",
+      "films": [
+        {
+          "filmId": "Q205028",
+          "title": "Iron Man 2",
+          "year": 2010,
+          "type": "film",
+          "director": "Jon Favreau",
+          "genres": [
+            "action film",
+            "adventure film",
+            "science fiction film",
+            "superhero film"
+          ],
+          "imdbId": "tt1228705"
+        },
+        {
+          "filmId": "Q113655279",
+          "title": "Minister of Foreign Affairs Moshe Sharett Addresses the UN General Assembly on Jerusalem",
+          "year": 1950,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113655409",
+          "title": "Minister of Foreign Affairs Moshe Sharett Speaks in the General Debate at the UN",
+          "year": 1950,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        }
+      ]
+    },
+    {
+      "locationId": "Q1501652",
+      "name": "General Motors Building",
+      "lat": 40.763888888,
+      "lng": -73.9725,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10022",
+      "films": [
+        {
+          "filmId": "Q2172728",
+          "title": "The Early Show",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "news program"
+          ],
+          "imdbId": "tt0220225"
+        }
+      ]
+    },
+    {
+      "locationId": "Q11290",
+      "name": "Grand Central Terminal",
+      "lat": 40.752777777,
+      "lng": -73.977222222,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10017",
+      "films": [
+        {
+          "filmId": "Q629596",
+          "title": "Friends with Benefits",
+          "year": 2011,
+          "type": "film",
+          "director": "Q2576503",
+          "genres": [
+            "comedy film",
+            "romance film",
+            "romantic comedy film"
+          ],
+          "imdbId": "tt1632708"
+        },
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        },
+        {
+          "filmId": "Q51416",
+          "title": "Men in Black",
+          "year": 1997,
+          "type": "film",
+          "director": "Barry Sonnenfeld",
+          "genres": [
+            "action film",
+            "buddy cop film",
+            "buddy film",
+            "comedy film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0119654"
+        },
+        {
+          "filmId": "Q115816982",
+          "title": "Carly Simon: Live at Grand Central",
+          "year": 1995,
+          "type": "film",
+          "genres": [
+            "concert film"
+          ]
+        }
+      ]
+    },
+    {
+      "locationId": "Q903865",
+      "name": "Great Lawn and Turtle Pond",
+      "lat": 40.78167,
+      "lng": -73.96667,
+      "cdKey": null,
+      "zipKey": "99999",
+      "films": [
+        {
+          "filmId": "Q109810251",
+          "title": "The Concert in Central Park",
+          "year": 1982,
+          "type": "film",
+          "imdbId": "tt0218896"
+        },
+        {
+          "filmId": "Q109810718",
+          "title": "The Sounds of Silence",
+          "year": null,
+          "type": "film"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1544785",
+      "name": "Greenpoint",
+      "lat": 40.730555555,
+      "lng": -73.951388888,
+      "cdKey": "Brooklyn-1",
+      "zipKey": "11222",
+      "films": [
+        {
+          "filmId": "Q1145732",
+          "title": "Sleepers",
+          "year": 1996,
+          "type": "film",
+          "director": "Barry Levinson",
+          "genres": [
+            "buddy film",
+            "coming-of-age film",
+            "crime film",
+            "drama film",
+            "neo-noir",
+            "prison film",
+            "rape and revenge film",
+            "thriller film",
+            "trial film"
+          ],
+          "imdbId": "tt0117665"
+        }
+      ]
+    },
+    {
+      "locationId": "Q205380",
+      "name": "Greenwich Village",
+      "lat": 40.733611111,
+      "lng": -74.002777777,
+      "cdKey": "Manhattan-2",
+      "zipKey": "10014",
+      "films": [
+        {
+          "filmId": "Q615254",
+          "title": "Crocodile Dundee",
+          "year": 1986,
+          "type": "film",
+          "director": "Peter Faiman",
+          "genres": [
+            "adventure film",
+            "romantic comedy film"
+          ],
+          "imdbId": "tt0090555"
+        }
+      ]
+    },
+    {
+      "locationId": "Q5645778",
+      "name": "Hammerstein Ballroom",
+      "lat": 40.752908,
+      "lng": -73.994189,
+      "cdKey": "Manhattan-4",
+      "zipKey": "10001",
+      "films": [
+        {
+          "filmId": "Q3835479",
+          "title": "Live on the Other Side",
+          "year": 2006,
+          "type": "film",
+          "genres": [
+            "nu metal"
+          ]
+        },
+        {
+          "filmId": "Q1089169",
+          "title": "Live",
+          "year": 2002,
+          "type": "film",
+          "genres": [
+            "nu metal"
+          ]
+        }
+      ]
+    },
+    {
+      "locationId": "Q189074",
+      "name": "Harlem",
+      "lat": 40.809033333,
+      "lng": -73.948372222,
+      "cdKey": "Manhattan-10",
+      "zipKey": "10027",
+      "films": [
+        {
+          "filmId": "Q108281389",
+          "title": "The Perfect Find",
+          "year": 2023,
+          "type": "film",
+          "director": "Numa Perrier",
+          "genres": [
+            "romantic comedy film"
+          ],
+          "imdbId": "tt8400584"
+        },
+        {
+          "filmId": "Q48818131",
+          "title": "Uncle Drew",
+          "year": 2018,
+          "type": "film",
+          "director": "Charles Stone III",
+          "genres": [
+            "comedy film"
+          ],
+          "imdbId": "tt7334528"
+        }
+      ]
+    },
+    {
+      "locationId": "Q11297",
+      "name": "Headquarters of the United Nations",
+      "lat": 40.749629166,
+      "lng": -73.96739,
+      "cdKey": "Manhattan-6",
+      "zipKey": "10017",
+      "films": [
+        {
+          "filmId": "Q113667559",
+          "title": "Prime Minister Golda Meir Travels to the United States for the 25th Anniversary of the Establishment of the United Nations",
+          "year": 1970,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113666680",
+          "title": "News From the United States, June 1968",
+          "year": 1968,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113666116",
+          "title": "President of Israel Zalman Shazars Official Visit to the United States",
+          "year": 1966,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113665548",
+          "title": "The Funeral of Former Prime Minister and Foreign Minister Moshe Sharett",
+          "year": 1965,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113662222",
+          "title": "News from the world, November 1962",
+          "year": 1962,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113673559",
+          "title": "News of the World: March 1961",
+          "year": 1961,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113674130",
+          "title": "World News, October 1961",
+          "year": 1961,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113672194",
+          "title": "David Ben Gurion on Official Visit to the United States",
+          "year": 1960,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113672963",
+          "title": "News From the United States, October 1960",
+          "year": 1960,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113670560",
+          "title": "Israeli Ambassador to the UN Abba Eben Completes His Service",
+          "year": 1959,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113671263",
+          "title": "News From the United States, October 1959",
+          "year": 1959,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113669834",
+          "title": "Israels Permanent Representative to the United Nations Abba Eban Condemns Egypt",
+          "year": 1955,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113668805",
+          "title": "News From the United States, August 1953",
+          "year": 1953,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113655101",
+          "title": "Israel is Accepted as UN Member, Foreign Minister Moshe Sharett Speaks",
+          "year": 1949,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113655240",
+          "title": "Israeli Representative Abba Eban Addresses the United Nations General Assembly",
+          "year": 1949,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113655251",
+          "title": "Speech by Foreign Minister Moshe Sharett Before Traveling to the United Nations",
+          "year": 1949,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        }
+      ]
+    },
+    {
+      "locationId": "Q840133",
+      "name": "Hell's Kitchen",
+      "lat": 40.764166666,
+      "lng": -73.992222222,
+      "cdKey": "Manhattan-4",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q45928156",
+          "title": "God Has a Rap Sheet",
+          "year": 2003,
+          "type": "film",
+          "director": "Kamal Ahmed",
+          "genres": [
+            "drama film"
+          ],
+          "imdbId": "tt0353497"
+        },
+        {
+          "filmId": "Q274167",
+          "title": "The Exorcist",
+          "year": 1973,
+          "type": "film",
+          "director": "William Friedkin",
+          "genres": [
+            "drama film",
+            "horror film",
+            "mystery film",
+            "satanic film",
+            "supernatural horror film",
+            "thriller film"
+          ],
+          "imdbId": "tt0070047",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Exorcist%20steps.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q109982",
+      "name": "Herald Square",
+      "lat": 40.750122222,
+      "lng": -73.987744444,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10001",
+      "films": [
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        }
+      ]
+    },
+    {
+      "locationId": "Q5746336",
+      "name": "Hester Street",
+      "lat": 40.7171,
+      "lng": -73.9948,
+      "cdKey": "Manhattan-3",
+      "zipKey": "10002",
+      "films": [
+        {
+          "filmId": "Q113667165",
+          "title": "A Look at Architectural Preservation in Tel Aviv",
+          "year": 1971,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        }
+      ]
+    },
+    {
+      "locationId": "Q240711",
+      "name": "Hotel Chelsea",
+      "lat": 40.744444444,
+      "lng": -73.996944444,
+      "cdKey": "Manhattan-4",
+      "zipKey": "10011",
+      "films": [
+        {
+          "filmId": "Q484675",
+          "title": "Léon: The Professional",
+          "year": 1994,
+          "type": "film",
+          "director": "Luc Besson",
+          "genres": [
+            "action film",
+            "buddy film",
+            "crime film",
+            "crime thriller film",
+            "drama film",
+            "gangster film",
+            "mystery film"
+          ],
+          "imdbId": "tt0110413",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Leon%20the%20Professional.png?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q5928735",
+      "name": "Hudson Hotel",
+      "lat": 40.7684,
+      "lng": -73.985,
+      "cdKey": "Manhattan-4",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q824192",
+          "title": "The Daily Show",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "late-night talk show",
+            "political satire"
+          ],
+          "imdbId": "tt0115147",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Daily%20Show%20studio.JPG?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q952270",
+      "name": "Intrepid Sea, Air & Space Museum",
+      "lat": 40.764722,
+      "lng": -74.000833,
+      "cdKey": null,
+      "zipKey": null,
+      "films": [
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        }
+      ]
+    },
+    {
+      "locationId": "Q8685",
+      "name": "John F. Kennedy International Airport",
+      "lat": 40.64,
+      "lng": -73.78,
+      "cdKey": null,
+      "zipKey": "11434",
+      "films": [
+        {
+          "filmId": "Q494048",
+          "title": "The Bourne Legacy",
+          "year": 2012,
+          "type": "film",
+          "director": "Tony Gilroy",
+          "genres": [
+            "action film",
+            "action thriller",
+            "adventure film",
+            "spy film",
+            "thriller film"
+          ],
+          "imdbId": "tt1194173"
+        },
+        {
+          "filmId": "Q940139",
+          "title": "Get Him to the Greek",
+          "year": 2010,
+          "type": "film",
+          "director": "Nicholas Stoller",
+          "genres": [
+            "comedy film"
+          ],
+          "imdbId": "tt1226229",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Get%20Him%20to%20the%20Greek%20Cavendish%20Square.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q74077989",
+      "name": "Joker stairs",
+      "lat": 40.835833333,
+      "lng": -73.923888888,
+      "cdKey": "Bronx-4",
+      "zipKey": "10452",
+      "films": [
+        {
+          "filmId": "Q108628759",
+          "title": "Joker: Folie à Deux",
+          "year": 2024,
+          "type": "film",
+          "director": "Todd Phillips",
+          "genres": [
+            "crime film",
+            "drama film",
+            "musical film",
+            "psychological thriller",
+            "thriller film"
+          ],
+          "imdbId": "tt11315808"
+        },
+        {
+          "filmId": "Q42759035",
+          "title": "Joker",
+          "year": 2019,
+          "type": "film",
+          "director": "Todd Phillips",
+          "genres": [
+            "crime film",
+            "drama film",
+            "psychological thriller film",
+            "thriller film"
+          ],
+          "imdbId": "tt7286456"
+        }
+      ]
+    },
+    {
+      "locationId": "Q3194285",
+      "name": "Kaufman Astoria Studios",
+      "lat": 40.756666666,
+      "lng": -73.924722222,
+      "cdKey": "Queens-1",
+      "zipKey": "11106",
+      "films": [
+        {
+          "filmId": "Q494048",
+          "title": "The Bourne Legacy",
+          "year": 2012,
+          "type": "film",
+          "director": "Tony Gilroy",
+          "genres": [
+            "action film",
+            "action thriller",
+            "adventure film",
+            "spy film",
+            "thriller film"
+          ],
+          "imdbId": "tt1194173"
+        },
+        {
+          "filmId": "Q107226",
+          "title": "The Bourne Ultimatum",
+          "year": 2007,
+          "type": "film",
+          "director": "Paul Greengrass",
+          "genres": [
+            "action film",
+            "action thriller",
+            "mystery film",
+            "spy film",
+            "thriller film"
+          ],
+          "imdbId": "tt0440963"
+        },
+        {
+          "filmId": "Q910523",
+          "title": "Shadows and Fog",
+          "year": 1991,
+          "type": "film",
+          "director": "Woody Allen",
+          "genres": [
+            "comedy film",
+            "comedy thriller",
+            "mystery film",
+            "neo-noir"
+          ],
+          "imdbId": "tt0105378"
+        }
+      ]
+    },
+    {
+      "locationId": "Q6413135",
+      "name": "Kingsbridge Armory",
+      "lat": 40.867906,
+      "lng": -73.898558,
+      "cdKey": "Bronx-7",
+      "zipKey": "10468",
+      "films": [
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        }
+      ]
+    },
+    {
+      "locationId": "Q319654",
+      "name": "LaGuardia Airport",
+      "lat": 40.775,
+      "lng": -73.875,
+      "cdKey": null,
+      "zipKey": "11369",
+      "films": [
+        {
+          "filmId": "Q1192783",
+          "title": "Le clan des siciliens",
+          "year": 1969,
+          "type": "film",
+          "director": "Henri Verneuil",
+          "genres": [
+            "crime film",
+            "drama film",
+            "heist film",
+            "mystery film"
+          ],
+          "imdbId": "tt0064169"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1190597",
+      "name": "Long Island City",
+      "lat": 40.750422222,
+      "lng": -73.948136111,
+      "cdKey": "Queens-2",
+      "zipKey": "11101",
+      "films": [
+        {
+          "filmId": "Q21148896",
+          "title": "Iron Fist",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "action television series",
+            "fantasy television series",
+            "superhero television program"
+          ],
+          "imdbId": "tt3322310"
+        }
+      ]
+    },
+    {
+      "locationId": "Q6692918",
+      "name": "Low Memorial Library",
+      "lat": 40.808333333,
+      "lng": -73.961944444,
+      "cdKey": "Manhattan-9",
+      "zipKey": "10027",
+      "films": [
+        {
+          "filmId": "Q108745",
+          "title": "Ghostbusters",
+          "year": 1984,
+          "type": "film",
+          "director": "Ivan Reitman",
+          "genres": [
+            "action film",
+            "adventure film",
+            "buddy film",
+            "comedy film",
+            "comedy horror",
+            "fantasy film",
+            "ghost film",
+            "monster film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0087332",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ghostbusers%20Logo.svg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1511813",
+      "name": "Lower East Side",
+      "lat": 40.717222,
+      "lng": -73.989722,
+      "cdKey": "Manhattan-3",
+      "zipKey": "10002",
+      "films": [
+        {
+          "filmId": "Q104137228",
+          "title": "Girls Just Want to Have Fun",
+          "year": 1983,
+          "type": "film",
+          "genres": [
+            "new wave"
+          ],
+          "imdbId": "tt4649250"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1756846",
+      "name": "Lyceum Theatre",
+      "lat": 40.7577,
+      "lng": -73.9847,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10036",
+      "films": [
+        {
+          "filmId": "Q52926614",
+          "title": "Oh, Hello On Broadway",
+          "year": 2017,
+          "type": "film",
+          "director": "Alex Timbers",
+          "genres": [
+            "comedy television program"
+          ],
+          "imdbId": "tt6987652"
+        }
+      ]
+    },
+    {
+      "locationId": "Q186125",
+      "name": "Madison Square Garden",
+      "lat": 40.750555555,
+      "lng": -73.993611111,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10001",
+      "films": [
+        {
+          "filmId": "Q940139",
+          "title": "Get Him to the Greek",
+          "year": 2010,
+          "type": "film",
+          "director": "Nicholas Stoller",
+          "genres": [
+            "comedy film"
+          ],
+          "imdbId": "tt1226229",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Get%20Him%20to%20the%20Greek%20Cavendish%20Square.jpg?width=300"
+        },
+        {
+          "filmId": "Q2720880",
+          "title": "Live at Madison Square Garden",
+          "year": 2009,
+          "type": "film",
+          "genres": [
+            "rock music"
+          ],
+          "imdbId": "tt1562274"
+        },
+        {
+          "filmId": "Q3723703",
+          "title": "Elton 60 – Live at Madison Square Garden",
+          "year": 2007,
+          "type": "film",
+          "director": "David Mallet",
+          "genres": [
+            "pop music"
+          ]
+        },
+        {
+          "filmId": "Q113637828",
+          "title": "News from Around the World: UK, USA, Soviet Union (Georgia)",
+          "year": 1955,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        },
+        {
+          "filmId": "Q113655572",
+          "title": "Honorary Guest Prime Minister David Ben Gurion at Madison Square Garden",
+          "year": 1951,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        }
+      ]
+    },
+    {
+      "locationId": "Q125050",
+      "name": "Manhattan Bridge",
+      "lat": 40.707222222,
+      "lng": -73.990833333,
+      "cdKey": null,
+      "zipKey": null,
+      "films": [
+        {
+          "filmId": "Q615254",
+          "title": "Crocodile Dundee",
+          "year": 1986,
+          "type": "film",
+          "director": "Peter Faiman",
+          "genres": [
+            "adventure film",
+            "romantic comedy film"
+          ],
+          "imdbId": "tt0090555"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1156778",
+      "name": "Manhattan Municipal Building",
+      "lat": 40.71292,
+      "lng": -74.00354,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10007",
+      "films": [
+        {
+          "filmId": "Q615254",
+          "title": "Crocodile Dundee",
+          "year": 1986,
+          "type": "film",
+          "director": "Peter Faiman",
+          "genres": [
+            "adventure film",
+            "romantic comedy film"
+          ],
+          "imdbId": "tt0090555"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1857997",
+      "name": "Manhattanville",
+      "lat": 40.816111111,
+      "lng": -73.956111111,
+      "cdKey": "Manhattan-9",
+      "zipKey": "10027",
+      "films": [
+        {
+          "filmId": "Q952511",
+          "title": "Cruising",
+          "year": 1980,
+          "type": "film",
+          "director": "William Friedkin",
+          "genres": [
+            "LGBTQ-related film",
+            "crime film",
+            "detective film",
+            "erotic thriller",
+            "neo-noir",
+            "thriller film"
+          ],
+          "imdbId": "tt0080569"
+        }
+      ]
+    },
+    {
+      "locationId": "Q160236",
+      "name": "Metropolitan Museum of Art",
+      "lat": 40.779444444,
+      "lng": -73.963333333,
+      "cdKey": null,
+      "zipKey": "99999",
+      "films": [
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        }
+      ]
+    },
+    {
+      "locationId": "Q6841642",
+      "name": "Middle Village",
+      "lat": 40.717355555,
+      "lng": -73.874172222,
+      "cdKey": "Queens-5",
+      "zipKey": "11379",
+      "films": [
+        {
+          "filmId": "Q104849295",
+          "title": "Abigail",
+          "year": 2019,
+          "type": "film",
+          "director": "Q27671191",
+          "genres": [
+            "drama film",
+            "student film"
+          ],
+          "imdbId": "tt8698066"
+        }
+      ]
+    },
+    {
+      "locationId": "Q6912985",
+      "name": "Morningside Drive",
+      "lat": 40.8028,
+      "lng": -73.9592,
+      "cdKey": "Manhattan-9",
+      "zipKey": "10025",
+      "films": [
+        {
+          "filmId": "Q20950014",
+          "title": "Café Society",
+          "year": 2016,
+          "type": "film",
+          "director": "Woody Allen",
+          "genres": [
+            "comedy drama",
+            "comedy film"
+          ],
+          "imdbId": "tt4513674",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Cannes%202016%201.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q3267643",
+      "name": "NBC Studios",
+      "lat": 40.759,
+      "lng": -73.979,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q5158318",
+          "title": "Concentration",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "game show"
+          ],
+          "imdbId": "tt0197146",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Concentration%20money%20shower%201972.JPG?width=300"
+        },
+        {
+          "filmId": "Q130838",
+          "title": "Today",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "morning show",
+            "news program",
+            "talk show"
+          ],
+          "imdbId": "tt0044298",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/GE%20Building%20by%20David%20Shankbone.JPG?width=300"
+        },
+        {
+          "filmId": "Q65089265",
+          "title": "Today with Jenna & Sheinelle",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "comedy television program",
+            "talk show"
+          ],
+          "imdbId": "tt18884302"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1974872",
+      "name": "Neil Simon Theatre",
+      "lat": 40.763055555,
+      "lng": -73.984444444,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q108040387",
+          "title": "Live in Concert",
+          "year": 1999,
+          "type": "film"
+        }
+      ]
+    },
+    {
+      "locationId": "Q18749113",
+      "name": "Neir's Tavern",
+      "lat": 40.6898,
+      "lng": -73.8634,
+      "cdKey": "Queens-9",
+      "zipKey": "11421",
+      "films": [
+        {
+          "filmId": "Q778979",
+          "title": "Tower Heist",
+          "year": 2011,
+          "type": "film",
+          "director": "Brett Ratner",
+          "genres": [
+            "comedy film",
+            "heist film"
+          ],
+          "imdbId": "tt0471042"
+        },
+        {
+          "filmId": "Q42047",
+          "title": "Goodfellas",
+          "year": 1990,
+          "type": "film",
+          "director": "Martin Scorsese",
+          "genres": [
+            "biographical film",
+            "crime drama film",
+            "crime film",
+            "crime thriller film",
+            "drama film",
+            "gangster film",
+            "historical drama film",
+            "historical film",
+            "period drama film",
+            "police procedural film",
+            "suspense film",
+            "thriller film"
+          ],
+          "imdbId": "tt0099685"
+        }
+      ]
+    },
+    {
+      "locationId": "Q2790405",
+      "name": "New York County Courthouse",
+      "lat": 40.7142,
+      "lng": -74.0015,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10007",
+      "films": [
+        {
+          "filmId": "Q108628759",
+          "title": "Joker: Folie à Deux",
+          "year": 2024,
+          "type": "film",
+          "director": "Todd Phillips",
+          "genres": [
+            "crime film",
+            "drama film",
+            "musical film",
+            "psychological thriller",
+            "thriller film"
+          ],
+          "imdbId": "tt11315808"
+        },
+        {
+          "filmId": "Q492089",
+          "title": "The Adjustment Bureau",
+          "year": 2011,
+          "type": "film",
+          "director": "George Nolfi",
+          "genres": [
+            "action film",
+            "fantasy film",
+            "romance film",
+            "science fiction film",
+            "thriller film"
+          ],
+          "imdbId": "tt1385826"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1138301",
+      "name": "New York Harbor",
+      "lat": 40.668333333,
+      "lng": -74.045555555,
+      "cdKey": null,
+      "zipKey": null,
+      "films": [
+        {
+          "filmId": "Q102013680",
+          "title": "Sailing",
+          "year": 1978,
+          "type": "film"
+        }
+      ]
+    },
+    {
+      "locationId": "Q7013887",
+      "name": "New York Public Library Main Branch",
+      "lat": 40.753333,
+      "lng": -73.982222,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10036",
+      "films": [
+        {
+          "filmId": "Q492089",
+          "title": "The Adjustment Bureau",
+          "year": 2011,
+          "type": "film",
+          "director": "George Nolfi",
+          "genres": [
+            "action film",
+            "fantasy film",
+            "romance film",
+            "science fiction film",
+            "thriller film"
+          ],
+          "imdbId": "tt1385826"
+        },
+        {
+          "filmId": "Q108745",
+          "title": "Ghostbusters",
+          "year": 1984,
+          "type": "film",
+          "director": "Ivan Reitman",
+          "genres": [
+            "action film",
+            "adventure film",
+            "buddy film",
+            "comedy film",
+            "comedy horror",
+            "fantasy film",
+            "ghost film",
+            "monster film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0087332",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ghostbusers%20Logo.svg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q556098",
+      "name": "Pace University",
+      "lat": 40.7114,
+      "lng": -74.005,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10038",
+      "films": [
+        {
+          "filmId": "Q1144268",
+          "title": "Inside the Actors Studio",
+          "year": null,
+          "type": "tv",
+          "director": "James Lipton",
+          "genres": [
+            "talk show"
+          ],
+          "imdbId": "tt0169455"
+        }
+      ]
+    },
+    {
+      "locationId": "Q3360756",
+      "name": "Palace Theatre",
+      "lat": 40.7588,
+      "lng": -73.9847,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10036",
+      "films": [
+        {
+          "filmId": "Q121394055",
+          "title": "Legally Blonde: The Musical",
+          "year": 2007,
+          "type": "film",
+          "director": "Beth McCarthy-Miller",
+          "genres": [
+            "comedy film",
+            "musical film"
+          ],
+          "imdbId": "tt1125194"
+        }
+      ]
+    },
+    {
+      "locationId": "Q109711",
+      "name": "Park Avenue",
+      "lat": 40.7786,
+      "lng": -73.9584,
+      "cdKey": "Manhattan-8",
+      "zipKey": "10028",
+      "films": [
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1066676",
+      "name": "Plaza Hotel",
+      "lat": 40.764527777,
+      "lng": -73.974444444,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q615254",
+          "title": "Crocodile Dundee",
+          "year": 1986,
+          "type": "film",
+          "director": "Peter Faiman",
+          "genres": [
+            "adventure film",
+            "romantic comedy film"
+          ],
+          "imdbId": "tt0090555"
+        }
+      ]
+    },
+    {
+      "locationId": "Q2760139",
+      "name": "Puck Building",
+      "lat": 40.724722222,
+      "lng": -73.995277777,
+      "cdKey": "Manhattan-2",
+      "zipKey": "10012",
+      "films": [
+        {
+          "filmId": "Q212135",
+          "title": "Will & Grace",
+          "year": null,
+          "type": "tv",
+          "director": "James Burrows",
+          "genres": [
+            "LGBT-related television series",
+            "sitcom"
+          ],
+          "imdbId": "tt0157246"
+        }
+      ]
+    },
+    {
+      "locationId": "Q125138",
+      "name": "Queens–Midtown Tunnel",
+      "lat": 40.745555555,
+      "lng": -73.964722222,
+      "cdKey": null,
+      "zipKey": null,
+      "films": [
+        {
+          "filmId": "Q51416",
+          "title": "Men in Black",
+          "year": 1997,
+          "type": "film",
+          "director": "Barry Sonnenfeld",
+          "genres": [
+            "action film",
+            "buddy cop film",
+            "buddy film",
+            "comedy film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0119654"
+        }
+      ]
+    },
+    {
+      "locationId": "Q125157",
+      "name": "Queensboro Bridge",
+      "lat": 40.756944444,
+      "lng": -73.954722222,
+      "cdKey": "Manhattan-8",
+      "zipKey": "10044",
+      "films": [
+        {
+          "filmId": "Q3289739",
+          "title": "Marche à l'ombre",
+          "year": 1984,
+          "type": "film",
+          "director": "Q1398256",
+          "genres": [
+            "comedy film"
+          ],
+          "imdbId": "tt0087681"
+        }
+      ]
+    },
+    {
+      "locationId": "Q753437",
+      "name": "Radio City Music Hall",
+      "lat": 40.759722,
+      "lng": -73.979167,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q95463223",
+          "title": "Ben Platt Live from Radio City Music Hall",
+          "year": 2020,
+          "type": "film",
+          "director": "Alex Timbers",
+          "genres": [
+            "concert film"
+          ],
+          "imdbId": "tt11000894"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1781122",
+      "name": "Red Hook",
+      "lat": 40.6765,
+      "lng": -74.0114,
+      "cdKey": "Brooklyn-6",
+      "zipKey": "11231",
+      "films": [
+        {
+          "filmId": "Q130374467",
+          "title": "Drop the Game",
+          "year": null,
+          "type": "film"
+        }
+      ]
+    },
+    {
+      "locationId": "Q7328714",
+      "name": "Richard Rodgers Theatre",
+      "lat": 40.759166666,
+      "lng": -73.986666666,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10036",
+      "films": [
+        {
+          "filmId": "Q84323848",
+          "title": "Hamilton",
+          "year": 2020,
+          "type": "film",
+          "director": "Thomas Kail",
+          "genres": [
+            "musical film"
+          ],
+          "imdbId": "tt8503618"
+        }
+      ]
+    },
+    {
+      "locationId": "Q7338892",
+      "name": "Rivington Street",
+      "lat": 40.719683333,
+      "lng": -73.987172222,
+      "cdKey": "Manhattan-3",
+      "zipKey": "10002",
+      "films": [
+        {
+          "filmId": "Q940139",
+          "title": "Get Him to the Greek",
+          "year": 2010,
+          "type": "film",
+          "director": "Nicholas Stoller",
+          "genres": [
+            "comedy film"
+          ],
+          "imdbId": "tt1226229",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Get%20Him%20to%20the%20Greek%20Cavendish%20Square.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q11277",
+      "name": "Rockefeller Center",
+      "lat": 40.758611111,
+      "lng": -73.979194444,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q21451640",
+          "title": "John Wick: Chapter 2",
+          "year": 2017,
+          "type": "film",
+          "director": "Chad Stahelski",
+          "genres": [
+            "action film",
+            "crime film",
+            "neo-noir",
+            "splatter film",
+            "thriller film",
+            "vigilante film"
+          ],
+          "imdbId": "tt4425200"
+        },
+        {
+          "filmId": "Q113667585",
+          "title": "Israeli Products are Showcased in New York",
+          "year": 1952,
+          "type": "film",
+          "genres": [
+            "documentary film",
+            "newsreel"
+          ]
+        }
+      ]
+    },
+    {
+      "locationId": "Q909777",
+      "name": "Roosevelt Island",
+      "lat": 40.7626016,
+      "lng": -73.9493046,
+      "cdKey": "Manhattan-8",
+      "zipKey": "10044",
+      "films": [
+        {
+          "filmId": "Q3986793",
+          "title": "The End of the Road",
+          "year": 1919,
+          "type": "film",
+          "director": "Edward H. Griffith",
+          "genres": [
+            "drama film",
+            "silent film"
+          ],
+          "imdbId": "tt0010088",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/The%20End%20of%20the%20Road%20(1919)%20-%201.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q7368225",
+      "name": "Roseland Ballroom",
+      "lat": 40.7636,
+      "lng": -73.9841,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q993948",
+          "title": "Evil or Divine – Live in New York City",
+          "year": 2003,
+          "type": "film"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1056326",
+      "name": "Shea Stadium",
+      "lat": 40.755555555,
+      "lng": -73.848055555,
+      "cdKey": null,
+      "zipKey": "11368",
+      "films": [
+        {
+          "filmId": "Q51416",
+          "title": "Men in Black",
+          "year": 1997,
+          "type": "film",
+          "director": "Barry Sonnenfeld",
+          "genres": [
+            "action film",
+            "buddy cop film",
+            "buddy film",
+            "comedy film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0119654"
+        }
+      ]
+    },
+    {
+      "locationId": "Q3486320",
+      "name": "Skirball Center for the Performing Arts",
+      "lat": 40.7297,
+      "lng": -73.9978,
+      "cdKey": "Manhattan-2",
+      "zipKey": "10012",
+      "films": [
+        {
+          "filmId": "Q16168335",
+          "title": "Standup Comedian",
+          "year": null,
+          "type": "film",
+          "genres": [
+            "stand-up comedy"
+          ]
+        }
+      ]
+    },
+    {
+      "locationId": "Q461572",
+      "name": "SoHo",
+      "lat": 40.723056,
+      "lng": -74.000833,
+      "cdKey": "Manhattan-2",
+      "zipKey": "10012",
+      "films": [
+        {
+          "filmId": "Q753517",
+          "title": "Limitless",
+          "year": 2011,
+          "type": "film",
+          "director": "Neil Burger",
+          "genres": [
+            "action film",
+            "drama film",
+            "science fiction film",
+            "thriller film"
+          ],
+          "imdbId": "tt1219289"
+        }
+      ]
+    },
+    {
+      "locationId": "Q201469",
+      "name": "Solomon R. Guggenheim Museum",
+      "lat": 40.783055555,
+      "lng": -73.958888888,
+      "cdKey": "Manhattan-8",
+      "zipKey": "10128",
+      "films": [
+        {
+          "filmId": "Q682549",
+          "title": "Mr. Popper's Penguins",
+          "year": 2011,
+          "type": "film",
+          "director": "Mark Waters",
+          "genres": [
+            "comedy film",
+            "family film"
+          ],
+          "imdbId": "tt1396218"
+        },
+        {
+          "filmId": "Q51416",
+          "title": "Men in Black",
+          "year": 1997,
+          "type": "film",
+          "director": "Barry Sonnenfeld",
+          "genres": [
+            "action film",
+            "buddy cop film",
+            "buddy film",
+            "comedy film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0119654"
+        }
+      ]
+    },
+    {
+      "locationId": "Q3116865",
+      "name": "Sony Music Studios",
+      "lat": 40.76688,
+      "lng": -73.98905,
+      "cdKey": "Manhattan-4",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q125855329",
+          "title": "All Apologies",
+          "year": 1993,
+          "type": "film"
+        },
+        {
+          "filmId": "Q4952025",
+          "title": "Boy! What a Girl!",
+          "year": 1947,
+          "type": "film",
+          "director": "Arthur H. Leonard",
+          "genres": [
+            "musical comedy"
+          ],
+          "imdbId": "tt0135169"
+        }
+      ]
+    },
+    {
+      "locationId": "Q7588180",
+      "name": "St. George",
+      "lat": 40.643333333,
+      "lng": -74.078888888,
+      "cdKey": "Staten Island-1",
+      "zipKey": "10301",
+      "films": [
+        {
+          "filmId": "Q23010088",
+          "title": "Spider-Man: Homecoming",
+          "year": 2017,
+          "type": "film",
+          "director": "Jon Watts",
+          "genres": [
+            "action film",
+            "superhero film"
+          ],
+          "imdbId": "tt2250912"
+        }
+      ]
+    },
+    {
+      "locationId": "Q25004498",
+      "name": "Studio 8H",
+      "lat": 40.759,
+      "lng": -73.979,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10019",
+      "films": [
+        {
+          "filmId": "Q13979",
+          "title": "Saturday Night Live",
+          "year": null,
+          "type": "tv",
+          "director": "Andy Warhol",
+          "genres": [
+            "humor",
+            "political satire",
+            "sketch show",
+            "stand-up comedy",
+            "variety show"
+          ],
+          "imdbId": "tt0072562"
+        }
+      ]
+    },
+    {
+      "locationId": "Q4022491",
+      "name": "Tavern on the Green",
+      "lat": 40.7723,
+      "lng": -73.9778,
+      "cdKey": null,
+      "zipKey": "99999",
+      "films": [
+        {
+          "filmId": "Q682549",
+          "title": "Mr. Popper's Penguins",
+          "year": 2011,
+          "type": "film",
+          "director": "Mark Waters",
+          "genres": [
+            "comedy film",
+            "family film"
+          ],
+          "imdbId": "tt1396218"
+        },
+        {
+          "filmId": "Q108745",
+          "title": "Ghostbusters",
+          "year": 1984,
+          "type": "film",
+          "director": "Ivan Reitman",
+          "genres": [
+            "action film",
+            "adventure film",
+            "buddy film",
+            "comedy film",
+            "comedy horror",
+            "fantasy film",
+            "ghost film",
+            "monster film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0087332",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ghostbusers%20Logo.svg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q13689",
+      "name": "The Battery",
+      "lat": 40.703611111,
+      "lng": -74.016111111,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10004",
+      "films": [
+        {
+          "filmId": "Q492089",
+          "title": "The Adjustment Bureau",
+          "year": 2011,
+          "type": "film",
+          "director": "George Nolfi",
+          "genres": [
+            "action film",
+            "fantasy film",
+            "romance film",
+            "science fiction film",
+            "thriller film"
+          ],
+          "imdbId": "tt1385826"
+        },
+        {
+          "filmId": "Q328695",
+          "title": "Superman Returns",
+          "year": 2006,
+          "type": "film",
+          "director": "Bryan Singer",
+          "genres": [
+            "action film",
+            "science fiction film"
+          ],
+          "imdbId": "tt0348150"
+        }
+      ]
+    },
+    {
+      "locationId": "Q2322983",
+      "name": "The St. Regis Hotel",
+      "lat": 40.761388888,
+      "lng": -73.974722222,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10022",
+      "films": [
+        {
+          "filmId": "Q124101278",
+          "title": "Steppin' Out",
+          "year": 1982,
+          "type": "film",
+          "director": "Steve Barron",
+          "imdbId": "tt8084918"
+        }
+      ]
+    },
+    {
+      "locationId": "Q17089953",
+      "name": "The Theater at Madison Square Garden",
+      "lat": 40.75063,
+      "lng": -73.993744,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10001",
+      "films": [
+        {
+          "filmId": "Q6147962",
+          "title": "Jammin' in New York",
+          "year": 1992,
+          "type": "film",
+          "genres": [
+            "comedy film",
+            "stand-up comedy"
+          ],
+          "imdbId": "tt0246643"
+        }
+      ]
+    },
+    {
+      "locationId": "Q11259",
+      "name": "Times Square",
+      "lat": 40.7575,
+      "lng": -73.985833333,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10036",
+      "films": [
+        {
+          "filmId": "Q3289739",
+          "title": "Marche à l'ombre",
+          "year": 1984,
+          "type": "film",
+          "director": "Q1398256",
+          "genres": [
+            "comedy film"
+          ],
+          "imdbId": "tt0087681"
+        }
+      ]
+    },
+    {
+      "locationId": "Q902959",
+      "name": "Times Square Studios",
+      "lat": 40.7569,
+      "lng": -73.9856,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10036",
+      "films": [
+        {
+          "filmId": "Q825946",
+          "title": "Good Morning America",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "news program",
+            "talk show"
+          ],
+          "imdbId": "tt0072506",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Canal%20St%206th%20Av%20td%20(2018-11-07)%2011%20-%20Duarte%20Square%2C%20One%20Hudson%20Square.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q766014",
+      "name": "Tribeca",
+      "lat": 40.7183,
+      "lng": -74.0078,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10013",
+      "films": [
+        {
+          "filmId": "Q753517",
+          "title": "Limitless",
+          "year": 2011,
+          "type": "film",
+          "director": "Neil Burger",
+          "genres": [
+            "action film",
+            "drama film",
+            "science fiction film",
+            "thriller film"
+          ],
+          "imdbId": "tt1219289"
+        },
+        {
+          "filmId": "Q490464",
+          "title": "Enchanted",
+          "year": 2007,
+          "type": "film",
+          "director": "Kevin Lima",
+          "genres": [
+            "comedy film",
+            "family film",
+            "fantasy film",
+            "live-action/animated film",
+            "musical film",
+            "romantic comedy"
+          ],
+          "imdbId": "tt0461770",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/116BtwBdwyRSD.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q866896",
+      "name": "Trinity Church",
+      "lat": 40.70801,
+      "lng": -74.01221,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10006",
+      "films": [
+        {
+          "filmId": "Q309366",
+          "title": "National Treasure",
+          "year": 2004,
+          "type": "film",
+          "director": "Jon Turteltaub",
+          "genres": [
+            "action film",
+            "adventure film",
+            "heist film",
+            "thriller film",
+            "treasure hunt film"
+          ],
+          "imdbId": "tt0368891",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/NationalTreasureFilmSet.jpg?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q844324",
+      "name": "Trump World Tower",
+      "lat": 40.75228,
+      "lng": -73.967664,
+      "cdKey": "Manhattan-6",
+      "zipKey": "10017",
+      "films": [
+        {
+          "filmId": "Q2002038",
+          "title": "The Celebrity Apprentice",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "reality television"
+          ]
+        }
+      ]
+    },
+    {
+      "locationId": "Q455587",
+      "name": "Upper East Side",
+      "lat": 40.769166666,
+      "lng": -73.965555555,
+      "cdKey": "Manhattan-8",
+      "zipKey": "10065",
+      "films": [
+        {
+          "filmId": "Q484675",
+          "title": "Léon: The Professional",
+          "year": 1994,
+          "type": "film",
+          "director": "Luc Besson",
+          "genres": [
+            "action film",
+            "buddy film",
+            "crime film",
+            "crime thriller film",
+            "drama film",
+            "gangster film",
+            "mystery film"
+          ],
+          "imdbId": "tt0110413",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Leon%20the%20Professional.png?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q429687",
+      "name": "Upper West Side",
+      "lat": 40.787,
+      "lng": -73.9754,
+      "cdKey": "Manhattan-7",
+      "zipKey": "10024",
+      "films": [
+        {
+          "filmId": "Q490464",
+          "title": "Enchanted",
+          "year": 2007,
+          "type": "film",
+          "director": "Kevin Lima",
+          "genres": [
+            "comedy film",
+            "family film",
+            "fantasy film",
+            "live-action/animated film",
+            "musical film",
+            "romantic comedy"
+          ],
+          "imdbId": "tt0461770",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/116BtwBdwyRSD.jpg?width=300"
+        },
+        {
+          "filmId": "Q590572",
+          "title": "Unforgettable",
+          "year": null,
+          "type": "tv",
+          "genres": [
+            "drama television series",
+            "police procedural"
+          ],
+          "imdbId": "tt1842530"
+        }
+      ]
+    },
+    {
+      "locationId": "Q11690",
+      "name": "Wall Street",
+      "lat": 40.706185,
+      "lng": -74.009107,
+      "cdKey": "Manhattan-1",
+      "zipKey": "10005",
+      "films": [
+        {
+          "filmId": "Q484675",
+          "title": "Léon: The Professional",
+          "year": 1994,
+          "type": "film",
+          "director": "Luc Besson",
+          "genres": [
+            "action film",
+            "buddy film",
+            "crime film",
+            "crime thriller film",
+            "drama film",
+            "gangster film",
+            "mystery film"
+          ],
+          "imdbId": "tt0110413",
+          "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Leon%20the%20Professional.png?width=300"
+        }
+      ]
+    },
+    {
+      "locationId": "Q7965343",
+      "name": "Walter Kerr Theatre",
+      "lat": 40.760555555,
+      "lng": -73.985555555,
+      "cdKey": "Manhattan-5",
+      "zipKey": "10036",
+      "films": [
+        {
+          "filmId": "Q59957973",
+          "title": "Springsteen on Broadway",
+          "year": 2018,
+          "type": "film",
+          "director": "Thom Zimny",
+          "genres": [
+            "concert film"
+          ],
+          "imdbId": "tt8716334"
+        }
+      ]
+    },
+    {
+      "locationId": "Q1370292",
+      "name": "Washington Heights",
+      "lat": 40.841666666,
+      "lng": -73.9375,
+      "cdKey": "Manhattan-12",
+      "zipKey": "10032",
+      "films": [
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        }
+      ]
+    },
+    {
+      "locationId": "Q909592",
+      "name": "Washington Square Park",
+      "lat": 40.730833333,
+      "lng": -73.997777777,
+      "cdKey": "Manhattan-2",
+      "zipKey": "10003",
+      "films": [
+        {
+          "filmId": "Q212689",
+          "title": "I Am Legend",
+          "year": 2007,
+          "type": "film",
+          "director": "Francis Lawrence",
+          "genres": [
+            "action film",
+            "drama film",
+            "horror film",
+            "post-apocalyptic film",
+            "vampire film"
+          ],
+          "imdbId": "tt0480249"
+        }
+      ]
+    },
+    {
+      "locationId": "Q4993391",
+      "name": "Waverly Place",
+      "lat": 40.734575,
+      "lng": -74.001436,
+      "cdKey": "Manhattan-2",
+      "zipKey": "10014",
+      "films": [
+        {
+          "filmId": "Q184342",
+          "title": "Wizards of Waverly Place",
+          "year": null,
+          "type": "tv",
+          "director": "David DeLuise",
+          "genres": [
+            "fantasy television series",
+            "teen sitcom"
+          ],
+          "imdbId": "tt0799922"
+        }
+      ]
+    },
+    {
+      "locationId": "Q4163943",
+      "name": "Weeksville",
+      "lat": 40.674722,
+      "lng": -73.925833,
+      "cdKey": "Brooklyn-8",
+      "zipKey": "11213",
+      "films": [
+        {
+          "filmId": "Q109714164",
+          "title": "OUT / SIDE OF TIME",
+          "year": 2021,
+          "type": "film",
+          "director": "Jenn Nkiru",
+          "genres": [
+            "documentary film",
+            "experimental film"
+          ],
+          "imdbId": "tt16307842"
+        }
+      ]
+    },
+    {
+      "locationId": "Q753529",
+      "name": "Yankee Stadium",
+      "lat": 40.829569,
+      "lng": -73.926392,
+      "cdKey": "Bronx-4",
+      "zipKey": "10452",
+      "films": [
+        {
+          "filmId": "Q492089",
+          "title": "The Adjustment Bureau",
+          "year": 2011,
+          "type": "film",
+          "director": "George Nolfi",
+          "genres": [
+            "action film",
+            "fantasy film",
+            "romance film",
+            "science fiction film",
+            "thriller film"
+          ],
+          "imdbId": "tt1385826"
+        }
+      ]
+    }
+  ]
+}
